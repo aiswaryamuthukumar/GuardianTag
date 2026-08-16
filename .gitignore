@@ -1,0 +1,37 @@
+# --- Root ---
+.DS_Store
+*.log
+
+# --- Backend (Python) ---
+backend/.venv/
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.egg-info/
+backend/.pytest_cache/
+backend/.env
+backend/.mypy_cache/
+backend/.ruff_cache/
+
+# --- Mobile (Expo / RN) ---
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/*.jks
+mobile/*.p8
+mobile/*.p12
+mobile/*.key
+mobile/*.mobileprovision
+mobile/.env
+mobile/npm-debug.*
+mobile/ios/
+mobile/android/
+
+# --- ESP32 / PlatformIO ---
+esp32/**/.pio/
+esp32/**/secrets.h
+
+# --- Editors ---
+.vscode/
+.idea/

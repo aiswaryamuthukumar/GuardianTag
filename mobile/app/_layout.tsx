@@ -17,6 +17,7 @@ import { DeviceSocketsProvider } from "@/components/DeviceSocketsProvider";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { setupOnlineManager } from "@/lib/offline/onlineManager";
 import { PERSIST_MAX_AGE_MS, queryPersister } from "@/lib/offline/persister";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
@@ -77,10 +78,12 @@ export default function RootLayout() {
         persistOptions={{ persister: queryPersister, maxAge: PERSIST_MAX_AGE_MS }}
       >
         <StatusBar style="light" />
-        <DeviceSocketsProvider>
-          <OfflineBanner />
-          <RootLayoutNav />
-        </DeviceSocketsProvider>
+        <ErrorBoundary>
+          <DeviceSocketsProvider>
+            <OfflineBanner />
+            <RootLayoutNav />
+          </DeviceSocketsProvider>
+        </ErrorBoundary>
       </PersistQueryClientProvider>
     </ClerkProvider>
   );

@@ -17,14 +17,28 @@ export default function Home() {
   const devicesQuery = useQuery({
     queryKey: ["devices"],
     queryFn: () => api.get<Device[]>("/devices"),
+    retry: 3, // Retry up to 3 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
+
   const summaryQuery = useQuery({
     queryKey: ["analytics-summary"],
     queryFn: () => api.get<AnalyticsSummary>("/analytics/summary"),
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
+
   const scoreQuery = useQuery({
     queryKey: ["security-score"],
     queryFn: () => api.get<SecurityScore>("/gamification/security-score"),
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const loading = devicesQuery.isLoading || summaryQuery.isLoading || scoreQuery.isLoading;
@@ -38,7 +52,16 @@ export default function Home() {
       </Text>
 
       {loading ? <LoadingState /> : null}
-      {error ? <ErrorState message={(error as Error).message} onRetry={() => devicesQuery.refetch()} /> : null}
+      {error ? (<
+        ErrorState 
+        message={(error as Error).message} 
+        onRetry={() => {
+          devicesQuery.refetch();
+          summaryQuery.refetch();
+          scoreQuery.refetch()
+        }} 
+        /> 
+      ): null}
 
       {!loading && !error ? (
         <>

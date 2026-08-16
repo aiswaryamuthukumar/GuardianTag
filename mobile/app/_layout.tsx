@@ -1,13 +1,18 @@
+if (typeof window !== 'undefined') {
+  const StyleSheet = require('react-native').StyleSheet as any;
+  StyleSheet.setFlag?.('darkMode', 'class');
+}
+
 import "../global.css";
 import { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { Stack } from "expo-router";
 import { ClerkProvider } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
+import { useAuth } from "@clerk/clerk-expo";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { colors } from "@/constants/theme";
-import { AuthGate } from "@/components/AuthGate";
 import { DeviceSocketsProvider } from "@/components/DeviceSocketsProvider";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { setupOnlineManager } from "@/lib/offline/onlineManager";
@@ -18,6 +23,34 @@ const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 if (!publishableKey) {
   throw new Error(
     "Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY - set it in mobile/.env (see .env.example)",
+  );
+}
+
+function RootLayoutNav() {
+  const { isLoaded, isSignedIn } = useAuth();
+
+  if (!isLoaded) return null;
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.background },
+      }}
+    >
+      <Stack.Screen 
+        name="index" 
+        options={{ headerShown: false }} 
+      />
+      <Stack.Screen 
+        name="(auth)" 
+        options={{ headerShown: false }} 
+      />
+      <Stack.Screen 
+        name="(app)" 
+        options={{ headerShown: false }} 
+      />
+    </Stack>
   );
 }
 
@@ -44,21 +77,10 @@ export default function RootLayout() {
         persistOptions={{ persister: queryPersister, maxAge: PERSIST_MAX_AGE_MS }}
       >
         <StatusBar style="light" />
-        <AuthGate>
-          <DeviceSocketsProvider>
-            <OfflineBanner />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: colors.background },
-              }}
-            >
-              <Stack.Screen name="index" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(app)" />
-            </Stack>
-          </DeviceSocketsProvider>
-        </AuthGate>
+        <DeviceSocketsProvider>
+          <OfflineBanner />
+          <RootLayoutNav />
+        </DeviceSocketsProvider>
       </PersistQueryClientProvider>
     </ClerkProvider>
   );

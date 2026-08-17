@@ -1,4 +1,4 @@
-import { View, Text, Alert } from "react-native";
+﻿import { View, Text, Alert } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApi } from "@/hooks/useApi";
@@ -69,10 +69,10 @@ export default function AssetDetails() {
 
       <Card className="mb-4">
         <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-white font-semibold">Guardian status</Text>
+          <Text className="text-foreground dark:text-white font-semibold">Guardian status</Text>
           <Badge label={asset.is_armed ? "Armed" : "Disarmed"} tone={asset.is_armed ? "safe" : "muted"} />
         </View>
-        <Text className="text-muted mb-4">
+        <Text className="text-muted dark:text-[#8A8D98] mb-4">
           {asset.is_armed
             ? "This asset is actively monitored. Unexpected movement will trigger an alert."
             : "This asset is not currently monitored."}
@@ -87,8 +87,8 @@ export default function AssetDetails() {
 
       {asset.description ? (
         <Card className="mb-4">
-          <Text className="text-white font-semibold mb-1">Description</Text>
-          <Text className="text-muted">{asset.description}</Text>
+          <Text className="text-foreground dark:text-white font-semibold mb-1">Description</Text>
+          <Text className="text-muted dark:text-[#8A8D98]">{asset.description}</Text>
         </Card>
       ) : null}
 

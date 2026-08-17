@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { Alert } from "react-native";
 import { router } from "expo-router";
-import { useAuth } from "@clerk/clerk-expo";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApi } from "@/hooks/useApi";
 import { usePushRegistration } from "@/hooks/usePushRegistration";
+import { useAppAuth } from "@/lib/auth/developmentMock";
 import { openDeviceSocket, type DeviceSocketMessage } from "@/lib/ws/deviceSocket";
 import type { Device } from "@/types/api";
 
@@ -14,7 +14,7 @@ import type { Device } from "@/types/api";
  * needing to pull-to-refresh. Mount once, near the root, alongside AuthGate.
  */
 export function DeviceSocketsProvider({ children }: { children: React.ReactNode }) {
-  const { isSignedIn, getToken } = useAuth();
+  const { isSignedIn, getToken } = useAppAuth();
   const api = useApi();
   const queryClient = useQueryClient();
   usePushRegistration();

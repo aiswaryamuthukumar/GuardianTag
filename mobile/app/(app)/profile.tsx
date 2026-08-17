@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
-import { View, Text, TextInput } from "react-native";
+import { View, Text, TextInput, Alert } from "react-native";
 import { router } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApi } from "@/hooks/useApi";
+import { useAppAuth } from "@/lib/auth/developmentMock";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Card } from "@/components/ui/Card";
+import { StatRow } from "@/components/ui/StatRow";
+import { StatTile } from "@/components/ui/StatTile";
+import { ListRow } from "@/components/ui/ListRow";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { LoadingState, ErrorState } from "@/components/ui/StateViews";
-import type { GuardianLevel, SecurityScore, User } from "@/types/api";
+import type { Asset, Device, GuardianLevel, SecurityScore, User } from "@/types/api";
 
 const levelLabels: Record<GuardianLevel, string> = {
   rookie: "Rookie",
@@ -22,12 +26,15 @@ const levelLabels: Record<GuardianLevel, string> = {
 export default function Profile() {
   const api = useApi();
   const queryClient = useQueryClient();
+  const { signOut } = useAppAuth();
 
   const meQuery = useQuery({ queryKey: ["me"], queryFn: () => api.get<User>("/auth/me") });
   const scoreQuery = useQuery({
     queryKey: ["security-score"],
     queryFn: () => api.get<SecurityScore>("/gamification/security-score"),
   });
+  const assetsQuery = useQuery({ queryKey: ["assets"], queryFn: () => api.get<Asset[]>("/assets") });
+  const devicesQuery = useQuery({ queryKey: ["devices"], queryFn: () => api.get<Device[]>("/devices") });
 
   const [fullName, setFullName] = useState("");
   const [roomNumber, setRoomNumber] = useState("");
@@ -51,6 +58,13 @@ export default function Profile() {
     onSuccess: (updated) => queryClient.setQueryData(["me"], updated),
   });
 
+  const confirmSignOut = () => {
+    Alert.alert("Sign out", "You'll return to the login screen.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Sign out", style: "destructive", onPress: () => signOut() },
+    ]);
+  };
+
   if (meQuery.isLoading) {
     return (
       <ScreenContainer>
@@ -69,55 +83,73 @@ export default function Profile() {
     );
   }
 
+  const armedCount = (assetsQuery.data ?? []).filter((a) => a.is_armed).length;
+
   return (
     <ScreenContainer>
-      <ScreenHeader title="Profile" showBack />
+      <ScreenHeader title="Profile" showBack subtitle="Your account and guardian stats" />
 
-      <Card className="mb-4 items-center py-6">
-        <View className="w-16 h-16 rounded-full bg-primary/20 items-center justify-center mb-3">
-          <Text className="text-2xl text-primary-light font-bold">
+      <View className="items-center mb-5">
+        <View className="w-20 h-20 rounded-full bg-surface-alt border border-border items-center justify-center mb-3">
+          <Text className="text-[26px] text-primary-light font-bold">
             {meQuery.data?.full_name?.[0]?.toUpperCase() ?? "?"}
           </Text>
         </View>
-        <Text className="text-white font-semibold text-lg">{meQuery.data?.full_name}</Text>
-        <Text className="text-muted">{meQuery.data?.email}</Text>
+        <Text className="text-foreground font-bold text-[19px]">{meQuery.data?.full_name}</Text>
+        <Text className="text-muted text-[13px] mt-0.5">{meQuery.data?.email}</Text>
         {scoreQuery.data ? (
           <View className="mt-2">
             <Badge label={levelLabels[scoreQuery.data.level]} tone="primary" />
           </View>
         ) : null}
+      </View>
+
+      <StatRow className="mb-6">
+        <StatTile label="XP" value={scoreQuery.data?.score ?? 0} accent="text-primary-light" />
+        <StatTile label="Protected assets" value={`${armedCount}/${assetsQuery.data?.length ?? 0}`} accent="text-safe-light" />
+        <StatTile label="Devices" value={devicesQuery.data?.length ?? 0} accent="text-foreground" />
+      </StatRow>
+
+      <Text className="text-foreground font-semibold text-[16px] mb-2">Edit profile</Text>
+      <Card className="mb-6">
+        <Text className="text-muted text-[13px] mb-1.5">Full name</Text>
+        <TextInput
+          className="bg-surface-alt text-foreground rounded-xl px-4 py-3 border border-border mb-3 text-[15px]"
+          value={fullName}
+          onChangeText={setFullName}
+          placeholderTextColor="#6B6E78"
+        />
+        <Text className="text-muted text-[13px] mb-1.5">Room number</Text>
+        <TextInput
+          className="bg-surface-alt text-foreground rounded-xl px-4 py-3 border border-border mb-3 text-[15px]"
+          value={roomNumber}
+          onChangeText={setRoomNumber}
+          placeholder="e.g. A101"
+          placeholderTextColor="#6B6E78"
+        />
+        <Text className="text-muted text-[13px] mb-1.5">Phone</Text>
+        <TextInput
+          className="bg-surface-alt text-foreground rounded-xl px-4 py-3 border border-border mb-4 text-[15px]"
+          value={phone}
+          onChangeText={setPhone}
+          placeholder="Optional"
+          placeholderTextColor="#6B6E78"
+          keyboardType="phone-pad"
+        />
+        <Button label="Save changes" onPress={() => updateMutation.mutate()} loading={updateMutation.isPending} />
       </Card>
 
-      <Text className="text-white mb-1">Full name</Text>
-      <TextInput
-        className="bg-surface text-white rounded-xl px-4 py-3 border border-border mb-3"
-        value={fullName}
-        onChangeText={setFullName}
-        placeholderTextColor="#8B8B9E"
-      />
-      <Text className="text-white mb-1">Room number</Text>
-      <TextInput
-        className="bg-surface text-white rounded-xl px-4 py-3 border border-border mb-3"
-        value={roomNumber}
-        onChangeText={setRoomNumber}
-        placeholder="e.g. A101"
-        placeholderTextColor="#8B8B9E"
-      />
-      <Text className="text-white mb-1">Phone</Text>
-      <TextInput
-        className="bg-surface text-white rounded-xl px-4 py-3 border border-border mb-4"
-        value={phone}
-        onChangeText={setPhone}
-        placeholder="Optional"
-        placeholderTextColor="#8B8B9E"
-        keyboardType="phone-pad"
-      />
+      <Text className="text-foreground font-semibold text-[16px] mb-2">Quick links</Text>
+      <Card className="mb-6">
+        <ListRow icon="bar-chart-2" title="Analytics" onPress={() => router.push("/(app)/analytics")} showChevron />
+        <ListRow icon="briefcase" title="Assets" onPress={() => router.push("/(app)/assets")} showChevron />
+        <ListRow icon="map-pin" title="Hostel map" onPress={() => router.push("/(app)/hostel-map")} showChevron />
+        <ListRow icon="settings" title="Settings" onPress={() => router.push("/(app)/settings")} showChevron isLast />
+      </Card>
 
-      <Button label="Save Changes" onPress={() => updateMutation.mutate()} loading={updateMutation.isPending} />
-
-      <View className="mt-3">
-        <Button label="Settings" variant="secondary" onPress={() => router.push("/(app)/settings")} />
-      </View>
+      <Card>
+        <ListRow icon="log-out" title="Sign out" onPress={confirmSignOut} tone="emergency" isLast />
+      </Card>
     </ScreenContainer>
   );
 }

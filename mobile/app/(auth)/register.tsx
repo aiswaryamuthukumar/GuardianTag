@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
 import { useSignUp } from "@clerk/clerk-expo";
 import { Link } from "expo-router";
@@ -66,12 +66,12 @@ export default function Register() {
 
   if (pendingVerification) {
     return (
-      <View className="flex-1 bg-background px-6 justify-center">
-        <Text className="text-3xl font-extrabold text-white mb-1">Check your email</Text>
-        <Text className="text-muted mb-8">Enter the verification code we sent to {email}.</Text>
+      <View className="flex-1 bg-background dark:bg-[#0B0C10] px-6 justify-center">
+        <Text className="text-3xl font-extrabold text-foreground dark:text-white mb-1">Check your email</Text>
+        <Text className="text-muted dark:text-[#8A8D98] mb-8">Enter the verification code we sent to {email}.</Text>
 
         <TextInput
-          className="bg-surface text-white rounded-xl px-4 py-3 mb-3 border border-border"
+          className="bg-surface dark:bg-[#15161C] text-foreground dark:text-white rounded-xl px-4 py-3 mb-3 border border-border"
           placeholder="Verification code"
           placeholderTextColor="#8B8B9E"
           keyboardType="number-pad"
@@ -86,26 +86,26 @@ export default function Register() {
           onPress={onVerify}
           disabled={loading}
         >
-          {loading ? <ActivityIndicator color="white" /> : <Text className="text-white font-semibold">Verify</Text>}
+          {loading ? <ActivityIndicator color="white" /> : <Text className="text-foreground dark:text-white font-semibold">Verify</Text>}
         </Pressable>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-background px-6 justify-center">
-      <Text className="text-3xl font-extrabold text-white mb-1">Create account</Text>
-      <Text className="text-muted mb-8">Guard your assets from day one.</Text>
+    <View className="flex-1 bg-background dark:bg-[#0B0C10] px-6 justify-center">
+      <Text className="text-3xl font-extrabold text-foreground dark:text-white mb-1">Create account</Text>
+      <Text className="text-muted dark:text-[#8A8D98] mb-8">Guard your assets from day one.</Text>
 
       <TextInput
-        className="bg-surface text-white rounded-xl px-4 py-3 mb-3 border border-border"
+        className="bg-surface dark:bg-[#15161C] text-foreground dark:text-white rounded-xl px-4 py-3 mb-3 border border-border"
         placeholder="Full name"
         placeholderTextColor="#8B8B9E"
         value={fullName}
         onChangeText={setFullName}
       />
       <TextInput
-        className="bg-surface text-white rounded-xl px-4 py-3 mb-3 border border-border"
+        className="bg-surface dark:bg-[#15161C] text-foreground dark:text-white rounded-xl px-4 py-3 mb-3 border border-border"
         placeholder="Email"
         placeholderTextColor="#8B8B9E"
         autoCapitalize="none"
@@ -114,7 +114,7 @@ export default function Register() {
         onChangeText={setEmail}
       />
       <TextInput
-        className="bg-surface text-white rounded-xl px-4 py-3 mb-3 border border-border"
+        className="bg-surface dark:bg-[#15161C] text-foreground dark:text-white rounded-xl px-4 py-3 mb-3 border border-border"
         placeholder="Password"
         placeholderTextColor="#8B8B9E"
         secureTextEntry
@@ -129,7 +129,7 @@ export default function Register() {
         onPress={onSubmit}
         disabled={loading}
       >
-        {loading ? <ActivityIndicator color="white" /> : <Text className="text-white font-semibold">Create Account</Text>}
+        {loading ? <ActivityIndicator color="white" /> : <Text className="text-foreground dark:text-white font-semibold">Create Account</Text>}
       </Pressable>
 
       <Link href="/(auth)/login" className="text-center text-primary-light">

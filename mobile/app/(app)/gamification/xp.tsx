@@ -1,11 +1,13 @@
-import { View, Text } from "react-native";
+﻿import { useEffect, useRef } from "react";
+import { Animated, View, Text } from "react-native";
 import { useQuery } from "@tanstack/react-query";
+import { Feather } from "@expo/vector-icons";
 import { useApi } from "@/hooks/useApi";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Card } from "@/components/ui/Card";
 import { LoadingState, ErrorState, EmptyState } from "@/components/ui/StateViews";
-import { guardianLevels, type GuardianLevelLabel } from "@/constants/theme";
+import { colors, guardianLevels, type GuardianLevelLabel } from "@/constants/theme";
 import type { GuardianLevel, SecurityScore, XPTransaction } from "@/types/api";
 
 const levelLabels: Record<GuardianLevel, GuardianLevelLabel> = {
@@ -15,6 +17,28 @@ const levelLabels: Record<GuardianLevel, GuardianLevelLabel> = {
   sentinel: "Sentinel",
   hostel_protector: "Hostel Protector",
 };
+
+function LevelBar({ index, filled }: { index: number; filled: boolean }) {
+  const width = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(width, {
+      toValue: filled ? 1 : 0,
+      duration: 400,
+      delay: index * 60,
+      useNativeDriver: false,
+    }).start();
+  }, [filled, index, width]);
+
+  return (
+    <View className="flex-1 h-1.5 rounded-full bg-surface-alt dark:bg-[#1B1D24] overflow-hidden">
+      <Animated.View
+        className="h-full bg-primary rounded-full"
+        style={{ width: width.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] }) }}
+      />
+    </View>
+  );
+}
 
 export default function GuardianXP() {
   const api = useApi();
@@ -40,38 +64,46 @@ export default function GuardianXP() {
       {scoreQuery.error ? <ErrorState onRetry={() => scoreQuery.refetch()} /> : null}
 
       {scoreQuery.data ? (
-        <Card className="mb-4 items-center py-6">
-          <Text className="text-3xl font-extrabold text-primary-light">{scoreQuery.data.score} XP</Text>
-          <Text className="text-white font-semibold mt-1">{levelLabels[scoreQuery.data.level]}</Text>
-          <Text className="text-muted mt-1">{scoreQuery.data.streak_days} day streak</Text>
+        <Card className="mb-6 items-center py-6">
+          <Text className="text-[36px] font-bold text-primary-light">{scoreQuery.data.score}</Text>
+          <Text className="text-muted dark:text-[#8A8D98] text-[12px] mt-0.5 tracking-wide">XP EARNED</Text>
+          <Text className="text-foreground dark:text-white font-semibold mt-3 text-[16px]">{levelLabels[scoreQuery.data.level]}</Text>
+          <View className="flex-row items-center mt-1">
+            <Feather name="trending-up" size={13} color={colors.mutedLight} style={{ marginRight: 4 }} />
+            <Text className="text-muted dark:text-[#8A8D98] text-[13px]">{scoreQuery.data.streak_days} day streak</Text>
+          </View>
 
-          <View className="flex-row mt-4 w-full gap-1">
+          <View className="flex-row mt-5 w-full gap-1">
             {guardianLevels.map((level, index) => (
-              <View
-                key={level}
-                className={`flex-1 h-1.5 rounded-full ${index <= levelIndex ? "bg-primary" : "bg-surface-alt"}`}
-              />
+              <LevelBar key={level} index={index} filled={index <= levelIndex} />
             ))}
           </View>
         </Card>
       ) : null}
 
-      <Text className="text-white font-semibold text-lg mb-2">Recent XP</Text>
+      <Text className="text-foreground dark:text-white font-semibold text-[17px] mb-2">Recent XP</Text>
       {xpQuery.data && xpQuery.data.length === 0 ? (
         <EmptyState title="No XP yet" message="Complete challenges and keep your assets guarded to earn XP." />
       ) : null}
-      {xpQuery.data?.map((tx) => (
-        <Card key={tx.id} className="mb-2 flex-row items-center justify-between">
-          <View className="flex-1 mr-2">
-            <Text className="text-white">{tx.reason}</Text>
-            <Text className="text-muted text-xs mt-0.5">{new Date(tx.created_at).toLocaleString()}</Text>
-          </View>
-          <Text className={tx.amount >= 0 ? "text-safe font-semibold" : "text-emergency font-semibold"}>
-            {tx.amount >= 0 ? "+" : ""}
-            {tx.amount}
-          </Text>
+      {xpQuery.data && xpQuery.data.length > 0 ? (
+        <Card>
+          {xpQuery.data.map((tx, i) => (
+            <View
+              key={tx.id}
+              className={`flex-row items-center justify-between py-3 ${i === xpQuery.data.length - 1 ? "" : "border-b border-hairline"}`}
+            >
+              <View className="flex-1 mr-2">
+                <Text className="text-foreground dark:text-white text-[15px]">{tx.reason}</Text>
+                <Text className="text-muted dark:text-[#8A8D98] text-[13px] mt-0.5">{new Date(tx.created_at).toLocaleDateString()}</Text>
+              </View>
+              <Text className={tx.amount >= 0 ? "text-safe-light font-semibold" : "text-emergency-light font-semibold"}>
+                {tx.amount >= 0 ? "+" : ""}
+                {tx.amount}
+              </Text>
+            </View>
+          ))}
         </Card>
-      ))}
+      ) : null}
     </ScreenContainer>
   );
 }

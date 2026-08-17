@@ -1,9 +1,9 @@
 import { useCallback } from "react";
-import { useAuth } from "@clerk/clerk-expo";
 import { apiClient } from "@/lib/api/client";
+import { useAppAuth } from "@/lib/auth/developmentMock";
 
 export function useApi() {
-  const { getToken } = useAuth();
+  const { getToken } = useAppAuth();
 
   const withAuth = useCallback(
     <T,>(fn: (token: string | undefined) => Promise<T>) => async () => fn((await getToken()) ?? undefined),

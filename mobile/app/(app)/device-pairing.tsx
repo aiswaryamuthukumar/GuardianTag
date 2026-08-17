@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { View, Text, TextInput } from "react-native";
 import { router } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -35,21 +35,21 @@ export default function DevicePairing() {
     <ScreenContainer>
       <ScreenHeader title="Pair a Device" showBack subtitle="Connect a new ESP32 sensor node" />
 
-      <Text className="text-muted mb-1">The pairing code is shown on the device's setup screen or printed on its label.</Text>
+      <Text className="text-muted dark:text-[#8A8D98] mb-1">The pairing code is shown on the device's setup screen or printed on its label.</Text>
 
       <View className="mt-4">
-        <Text className="text-white mb-1 mt-3">Device name</Text>
+        <Text className="text-foreground dark:text-white mb-1 mt-3">Device name</Text>
         <TextInput
-          className="bg-surface text-white rounded-xl px-4 py-3 border border-border"
+          className="bg-surface dark:bg-[#15161C] text-foreground dark:text-white rounded-xl px-4 py-3 border border-border"
           placeholder="e.g. Room A101 Node"
           placeholderTextColor="#8B8B9E"
           value={name}
           onChangeText={setName}
         />
 
-        <Text className="text-white mb-1 mt-3">Device ID</Text>
+        <Text className="text-foreground dark:text-white mb-1 mt-3">Device ID</Text>
         <TextInput
-          className="bg-surface text-white rounded-xl px-4 py-3 border border-border"
+          className="bg-surface dark:bg-[#15161C] text-foreground dark:text-white rounded-xl px-4 py-3 border border-border"
           placeholder="e.g. esp32-aa:bb:cc"
           placeholderTextColor="#8B8B9E"
           autoCapitalize="none"
@@ -57,9 +57,9 @@ export default function DevicePairing() {
           onChangeText={setDeviceUid}
         />
 
-        <Text className="text-white mb-1 mt-3">Pairing code</Text>
+        <Text className="text-foreground dark:text-white mb-1 mt-3">Pairing code</Text>
         <TextInput
-          className="bg-surface text-white rounded-xl px-4 py-3 border border-border"
+          className="bg-surface dark:bg-[#15161C] text-foreground dark:text-white rounded-xl px-4 py-3 border border-border"
           placeholder="6-digit code"
           placeholderTextColor="#8B8B9E"
           keyboardType="number-pad"

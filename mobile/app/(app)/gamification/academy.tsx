@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+﻿import { View, Text } from "react-native";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Card } from "@/components/ui/Card";
@@ -31,12 +31,14 @@ export default function GuardianAcademy() {
     <ScreenContainer>
       <ScreenHeader title="Guardian Academy" showBack subtitle="Habits that keep you safe" />
 
-      {lessons.map((lesson) => (
-        <Card key={lesson.title} className="mb-3">
-          <Text className="text-white font-semibold mb-1">{lesson.title}</Text>
-          <Text className="text-muted">{lesson.body}</Text>
-        </Card>
-      ))}
+      <Card>
+        {lessons.map((lesson, i) => (
+          <View key={lesson.title} className={`py-3.5 ${i === lessons.length - 1 ? "" : "border-b border-hairline"}`}>
+            <Text className="text-foreground dark:text-white font-medium text-[15px] mb-1">{lesson.title}</Text>
+            <Text className="text-muted dark:text-[#8A8D98] text-[13px] leading-5">{lesson.body}</Text>
+          </View>
+        ))}
+      </Card>
     </ScreenContainer>
   );
 }

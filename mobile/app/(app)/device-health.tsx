@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+﻿import { View, Text } from "react-native";
 import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useApi } from "@/hooks/useApi";
@@ -43,14 +43,14 @@ export default function DeviceHealth() {
       {devicesQuery.data?.map((device) => (
         <Card key={device.id} className="mb-2">
           <View className="flex-row items-center justify-between mb-2">
-            <Text className="text-white font-medium">{device.name}</Text>
+            <Text className="text-foreground dark:text-white font-medium">{device.name}</Text>
             <Badge label={device.status} tone={statusTone[device.status]} />
           </View>
-          <Text className="text-muted text-xs">Device ID: {device.device_uid}</Text>
-          <Text className="text-muted text-xs mt-1">
+          <Text className="text-muted dark:text-[#8A8D98] text-xs">Device ID: {device.device_uid}</Text>
+          <Text className="text-muted dark:text-[#8A8D98] text-xs mt-1">
             Firmware: {device.firmware_version ?? "unknown"}
           </Text>
-          <Text className="text-muted text-xs mt-1">
+          <Text className="text-muted dark:text-[#8A8D98] text-xs mt-1">
             Last seen:{" "}
             {device.last_seen_at ? new Date(device.last_seen_at).toLocaleString() : "never"}
           </Text>

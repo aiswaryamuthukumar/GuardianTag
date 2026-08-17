@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+﻿import { View, Text } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useApi } from "@/hooks/useApi";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
@@ -32,26 +32,26 @@ export default function HostelMap() {
 
       {meQuery.data ? (
         <Card className="mb-4">
-          <Text className="text-white font-semibold">Your room</Text>
-          <Text className="text-muted mt-1">{meQuery.data.room_number ?? "Not set — add it in Profile"}</Text>
+          <Text className="text-foreground dark:text-white font-semibold">Your room</Text>
+          <Text className="text-muted dark:text-[#8A8D98] mt-1">{meQuery.data.room_number ?? "Not set — add it in Profile"}</Text>
         </Card>
       ) : null}
 
-      <Text className="text-white font-semibold text-lg mb-2">Devices by location</Text>
+      <Text className="text-foreground dark:text-white font-semibold text-lg mb-2">Devices by location</Text>
       {devicesQuery.data && devicesQuery.data.length === 0 ? (
         <EmptyState title="No devices placed yet" message="Pair a device to see it here." />
       ) : null}
       {devicesQuery.data?.map((device) => (
         <Card key={device.id} className="mb-2 flex-row items-center justify-between">
           <View>
-            <Text className="text-white font-medium">{device.name}</Text>
-            <Text className="text-muted text-xs mt-0.5">{meQuery.data?.room_number ?? "Unknown room"}</Text>
+            <Text className="text-foreground dark:text-white font-medium">{device.name}</Text>
+            <Text className="text-muted dark:text-[#8A8D98] text-xs mt-0.5">{meQuery.data?.room_number ?? "Unknown room"}</Text>
           </View>
           <Badge label={device.status} tone={statusTone[device.status]} />
         </Card>
       ))}
 
-      <Text className="text-muted text-center mt-6">
+      <Text className="text-muted dark:text-[#8A8D98] text-center mt-6">
         A full interactive floor plan is on the roadmap — for now, devices are grouped by the room
         on your profile.
       </Text>

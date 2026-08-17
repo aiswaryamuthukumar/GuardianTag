@@ -1,3 +1,6 @@
+import { DEMO_MODE } from "@/lib/demo/config";
+import { mockRequest } from "@/lib/demo/mockApi";
+
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
 export class ApiError extends Error {
@@ -13,6 +16,10 @@ export class ApiError extends Error {
 type RequestOptions = Omit<RequestInit, "body"> & { body?: unknown };
 
 async function request<T>(path: string, options: RequestOptions = {}, token?: string): Promise<T> {
+  if (DEMO_MODE) {
+    return mockRequest<T>((options.method as "GET" | "POST" | "PATCH" | "DELETE") ?? "GET", path, options.body);
+  }
+
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {

@@ -1,18 +1,18 @@
-import { View, Text } from "react-native";
+﻿import { View, Text } from "react-native";
 
 export function StatTile({
   label,
   value,
-  accent = "text-white",
+  accent = "text-foreground dark:text-white",
 }: {
   label: string;
   value: string | number;
   accent?: string;
 }) {
   return (
-    <View className="flex-1 bg-surface border border-border rounded-2xl p-4">
-      <Text className={`text-2xl font-bold ${accent}`}>{value}</Text>
-      <Text className="text-muted text-xs mt-1">{label}</Text>
+    <View className="flex-1 items-center">
+      <Text className={`text-[26px] font-bold ${accent}`}>{value}</Text>
+      <Text className="text-muted text-[14px] mt-0.5">{label}</Text>
     </View>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { View, Text, TextInput } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -45,17 +45,17 @@ export default function EvidenceBoard() {
         <Card key={item.id} className="mb-2">
           <View className="flex-row items-center justify-between mb-1">
             <Badge label={item.type.replace("_", " ")} tone="primary" />
-            <Text className="text-muted text-xs">{new Date(item.captured_at).toLocaleString()}</Text>
+            <Text className="text-muted dark:text-[#8A8D98] text-xs">{new Date(item.captured_at).toLocaleString()}</Text>
           </View>
-          {item.content ? <Text className="text-white mt-1">{item.content}</Text> : null}
+          {item.content ? <Text className="text-foreground dark:text-white mt-1">{item.content}</Text> : null}
           {item.url ? <Text className="text-primary-light mt-1">{item.url}</Text> : null}
         </Card>
       ))}
 
       <View className="mt-4">
-        <Text className="text-white font-semibold mb-2">Add a note</Text>
+        <Text className="text-foreground dark:text-white font-semibold mb-2">Add a note</Text>
         <TextInput
-          className="bg-surface text-white rounded-xl px-4 py-3 border border-border mb-3"
+          className="bg-surface dark:bg-[#15161C] text-foreground dark:text-white rounded-xl px-4 py-3 border border-border dark:border-[#26282F] mb-3"
           placeholder="What did you observe?"
           placeholderTextColor="#8B8B9E"
           multiline

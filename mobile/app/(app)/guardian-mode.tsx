@@ -1,13 +1,16 @@
-import { View, Text } from "react-native";
+﻿import { View, Text, Switch, Pressable } from "react-native";
+import { router } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Feather } from "@expo/vector-icons";
 import { useApi } from "@/hooks/useApi";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { ListRow } from "@/components/ui/ListRow";
+import { ShieldScanner } from "@/components/ui/ShieldScanner";
 import { LoadingState, ErrorState, EmptyState } from "@/components/ui/StateViews";
-import type { Asset } from "@/types/api";
+import { colors } from "@/constants/theme";
+import type { Asset, Incident } from "@/types/api";
 
 export default function GuardianMode() {
   const api = useApi();
@@ -24,12 +27,28 @@ export default function GuardianMode() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["assets"] }),
   });
 
+  const simulateMutation = useMutation({
+    mutationFn: () => api.post<Incident>("/demo/simulate-incident"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["incidents"] });
+      router.push("/(app)/emergency-alert");
+    },
+  });
+
   const assets = assetsQuery.data ?? [];
   const armedCount = assets.filter((a) => a.is_armed).length;
+  const isActive = armedCount > 0;
 
   return (
     <ScreenContainer onRefresh={() => assetsQuery.refetch()} refreshing={assetsQuery.isRefetching}>
-      <ScreenHeader title="Guardian Mode" showBack subtitle="Arm assets to start monitoring" />
+      <ScreenHeader
+        title="Guardian"
+        right={
+          <Pressable onPress={() => router.push("/(app)/assets")}>
+            <Text className="text-primary-light text-[14px] font-medium">Manage</Text>
+          </Pressable>
+        }
+      />
 
       {assetsQuery.isLoading ? <LoadingState /> : null}
       {assetsQuery.error ? (
@@ -38,47 +57,51 @@ export default function GuardianMode() {
 
       {!assetsQuery.isLoading && !assetsQuery.error ? (
         <>
-          <Card className="mb-4 items-center py-6">
-            <View
-              className={`w-20 h-20 rounded-full items-center justify-center mb-3 ${
-                armedCount > 0 ? "bg-safe/20" : "bg-surface-alt"
-              }`}
-            >
-              <Text className={`text-3xl font-bold ${armedCount > 0 ? "text-safe" : "text-muted"}`}>
-                {armedCount}
-              </Text>
-            </View>
-            <Text className="text-white font-semibold">
-              {armedCount > 0 ? "Guardian Mode is active" : "Nothing is armed"}
+          <View className="items-center py-8 mb-2">
+            <ShieldScanner active={isActive} tone={isActive ? "primary" : "muted"} size={128} />
+            <Text className="text-foreground dark:text-white font-semibold text-[18px] mt-5">
+              {isActive ? "Guardian Mode is active" : "Nothing is armed"}
             </Text>
-            <Text className="text-muted text-center mt-1">
+            <Text className="text-muted dark:text-[#8A8D98] text-center mt-1 text-[14px]">
               {armedCount} of {assets.length} assets are being monitored
             </Text>
-          </Card>
+          </View>
 
           {assets.length === 0 ? (
             <EmptyState title="No assets to guard" message="Add an asset first from the Assets tab." />
-          ) : null}
-
-          {assets.map((asset) => (
-            <Card key={asset.id} className="mb-2 flex-row items-center justify-between">
-              <View>
-                <Text className="text-white font-medium">{asset.name}</Text>
-                <Text className="text-muted text-xs capitalize">{asset.category}</Text>
-              </View>
-              <View className="flex-row items-center gap-2">
-                <Badge label={asset.is_armed ? "Armed" : "Off"} tone={asset.is_armed ? "safe" : "muted"} />
-                <View className="w-24">
-                  <Button
-                    label={asset.is_armed ? "Disarm" : "Arm"}
-                    variant={asset.is_armed ? "secondary" : "primary"}
-                    loading={armMutation.isPending && armMutation.variables?.id === asset.id}
-                    onPress={() => armMutation.mutate({ id: asset.id, is_armed: !asset.is_armed })}
-                  />
-                </View>
-              </View>
+          ) : (
+            <Card className="mb-5">
+              {assets.map((asset, i) => (
+                <ListRow
+                  key={asset.id}
+                  icon={asset.category === "laptop" ? "monitor" : asset.category === "bag" ? "briefcase" : "file-text"}
+                  title={asset.name}
+                  subtitle={asset.is_armed ? "Armed · monitoring for movement" : "Not monitored"}
+                  isLast={i === assets.length - 1}
+                  right={
+                    <Switch
+                      value={asset.is_armed}
+                      disabled={armMutation.isPending && armMutation.variables?.id === asset.id}
+                      onValueChange={(value) => armMutation.mutate({ id: asset.id, is_armed: value })}
+                      trackColor={{ false: colors.surfaceAlt, true: colors.primary }}
+                      thumbColor="#FFFFFF"
+                    />
+                  }
+                />
+              ))}
             </Card>
-          ))}
+          )}
+
+          <Pressable
+            onPress={() => simulateMutation.mutate()}
+            disabled={assets.length === 0 || simulateMutation.isPending}
+            className="flex-row items-center justify-center py-3 border border-border dark:border-[#26282F] rounded-xl"
+          >
+            <Feather name="zap" size={16} color={colors.mutedLight} style={{ marginRight: 8 }} />
+            <Text className="text-muted-light text-[14px] font-medium">
+              {simulateMutation.isPending ? "Simulating…" : "Simulate a test alert"}
+            </Text>
+          </Pressable>
         </>
       ) : null}
     </ScreenContainer>

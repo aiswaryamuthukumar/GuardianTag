@@ -16,7 +16,9 @@ export function ScreenContainer({
   if (!scroll) {
     return (
       <SafeAreaView className="flex-1 bg-background">
-        <View className="flex-1 px-5">{children}</View>
+        <View className="flex-1 px-5" style={{ paddingBottom: 110 }}>
+          {children}
+        </View>
       </SafeAreaView>
     );
   }
@@ -25,14 +27,10 @@ export function ScreenContainer({
     <SafeAreaView className="flex-1 bg-background">
       <ScrollView
         className="flex-1 px-5"
-        contentContainerStyle={{ paddingBottom: 32, paddingTop: 8 }}
+        contentContainerStyle={{ paddingBottom: 110, paddingTop: 4 }}
         refreshControl={
           onRefresh ? (
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={colors.primary}
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           ) : undefined
         }
       >

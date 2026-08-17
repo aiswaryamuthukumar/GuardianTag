@@ -1,11 +1,9 @@
 import { useEffect } from "react";
-import { View } from "react-native";
-import { useAuth } from "@clerk/clerk-expo";
 import { useRouter, useSegments } from "expo-router";
-import { colors } from "@/constants/theme";
+import { useAppAuth } from "@/lib/auth/developmentMock";
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn } = useAppAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -25,10 +23,6 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       router.replace("/(auth)/onboarding");
     }
   }, [isLoaded, isSignedIn, segments, router]);
-
-  if (!isLoaded) {
-    return <View className="flex-1 bg-background" />;
-  }
 
   return <>{children}</>;
 }

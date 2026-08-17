@@ -12,10 +12,11 @@ import { DeviceSocketsProvider } from "@/components/DeviceSocketsProvider";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { setupOnlineManager } from "@/lib/offline/onlineManager";
 import { PERSIST_MAX_AGE_MS, queryPersister } from "@/lib/offline/persister";
+import { DEMO_MODE } from "@/lib/demo/config";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-if (!publishableKey) {
+if (!DEMO_MODE && !publishableKey) {
   throw new Error(
     "Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY - set it in mobile/.env (see .env.example)",
   );
@@ -37,29 +38,35 @@ export default function RootLayout() {
     setupOnlineManager();
   }, []);
 
+  const content = (
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister: queryPersister, maxAge: PERSIST_MAX_AGE_MS }}
+    >
+      <StatusBar style="light" />
+      <AuthGate>
+        <DeviceSocketsProvider>
+          <OfflineBanner />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.background },
+            }}
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(app)" />
+          </Stack>
+        </DeviceSocketsProvider>
+      </AuthGate>
+    </PersistQueryClientProvider>
+  );
+
+  if (DEMO_MODE) return content;
+
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <PersistQueryClientProvider
-        client={queryClient}
-        persistOptions={{ persister: queryPersister, maxAge: PERSIST_MAX_AGE_MS }}
-      >
-        <StatusBar style="light" />
-        <AuthGate>
-          <DeviceSocketsProvider>
-            <OfflineBanner />
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: colors.background },
-              }}
-            >
-              <Stack.Screen name="index" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(app)" />
-            </Stack>
-          </DeviceSocketsProvider>
-        </AuthGate>
-      </PersistQueryClientProvider>
+      {content}
     </ClerkProvider>
   );
 }

@@ -3,16 +3,21 @@ import { useQuery } from "@tanstack/react-query";
 import { useApi } from "@/hooks/useApi";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
-import { StatTile } from "@/components/ui/StatTile";
 import { Card } from "@/components/ui/Card";
-import { LoadingState, ErrorState } from "@/components/ui/StateViews";
-import { IncidentTrendChart } from "@/components/charts/IncidentTrendChart";
-import { formatDuration } from "@/lib/format";
+import { LoadingState, ErrorState, EmptyState } from "@/components/ui/StateViews";
+import { SecurityGauge } from "@/components/charts/SecurityGauge";
+import { CaseDonut } from "@/components/charts/CaseDonut";
+import { ActivityTimeline } from "@/components/charts/ActivityTimeline";
+import { DeviceHealthBars } from "@/components/charts/DeviceHealthBars";
+import { ResponseTimeBars } from "@/components/charts/ResponseTimeBars";
+import { colors } from "@/constants/theme";
 import type {
   AnalyticsSummary,
   AssetCoverage,
   DailyIncidentCountApi,
+  Device,
   ResponseTimes,
+  SecurityScore,
 } from "@/types/api";
 
 export default function Analytics() {
@@ -34,6 +39,11 @@ export default function Analytics() {
     queryKey: ["analytics-coverage"],
     queryFn: () => api.get<AssetCoverage>("/analytics/asset-coverage"),
   });
+  const scoreQuery = useQuery({
+    queryKey: ["security-score"],
+    queryFn: () => api.get<SecurityScore>("/gamification/security-score"),
+  });
+  const devicesQuery = useQuery({ queryKey: ["devices"], queryFn: () => api.get<Device[]>("/devices") });
 
   const loading = summaryQuery.isLoading || trendQuery.isLoading;
   const error = summaryQuery.error || trendQuery.error;
@@ -43,65 +53,60 @@ export default function Analytics() {
       <ScreenHeader title="Analytics" showBack subtitle="How your guardians are doing" />
 
       {loading ? <LoadingState /> : null}
-      {error ? (
-        <ErrorState message={(error as Error).message} onRetry={() => summaryQuery.refetch()} />
+      {error ? <ErrorState message={(error as Error).message} onRetry={() => summaryQuery.refetch()} /> : null}
+
+      {scoreQuery.data ? (
+        <Card className="mb-4 items-center py-6">
+          <SecurityGauge score={scoreQuery.data.score} label="Security score" />
+          <View className="flex-row items-center mt-4 gap-4">
+            <Text className="text-muted text-[12px]">
+              <Text className="text-safe-light font-medium">{coverageQuery.data?.coverage_percent ?? 0}%</Text> asset coverage
+            </Text>
+            <Text className="text-muted text-[12px]">
+              <Text className="text-primary-light font-medium">{scoreQuery.data.streak_days}d</Text> streak
+            </Text>
+          </View>
+        </Card>
       ) : null}
 
       {summaryQuery.data ? (
-        <>
-          <View className="flex-row gap-3 mb-3">
-            <StatTile label="Devices" value={summaryQuery.data.total_devices} accent="text-primary-light" />
-            <StatTile label="Assets" value={summaryQuery.data.total_assets} accent="text-primary-light" />
-          </View>
-          <View className="flex-row gap-3 mb-3">
-            <StatTile
-              label="Open incidents"
-              value={summaryQuery.data.open_incidents}
-              accent={summaryQuery.data.open_incidents > 0 ? "text-emergency" : "text-safe"}
-            />
-            <StatTile label="Resolved" value={summaryQuery.data.resolved_incidents} accent="text-safe" />
-          </View>
-          <View className="flex-row gap-3 mb-4">
-            <StatTile label="False alarms" value={summaryQuery.data.false_alarms} accent="text-warning" />
-            {coverageQuery.data ? (
-              <StatTile
-                label="Asset coverage"
-                value={`${coverageQuery.data.coverage_percent}%`}
-                accent="text-primary-light"
-              />
-            ) : null}
-          </View>
-        </>
+        <Card className="mb-4">
+          <Text className="text-foreground font-semibold mb-4">Case breakdown</Text>
+          <CaseDonut
+            segments={[
+              { label: "Resolved", value: summaryQuery.data.resolved_incidents, color: colors.safe },
+              { label: "Open", value: summaryQuery.data.open_incidents, color: colors.emergency },
+              { label: "False alarm", value: summaryQuery.data.false_alarms, color: colors.muted },
+            ]}
+          />
+        </Card>
       ) : null}
 
       {trendQuery.data && trendQuery.data.length > 0 ? (
         <Card className="mb-4">
-          <Text className="text-white font-semibold mb-3">Incidents, last 14 days</Text>
-          <IncidentTrendChart data={trendQuery.data} />
+          <Text className="text-foreground font-semibold mb-3">Incident activity, last 14 days</Text>
+          <ActivityTimeline data={trendQuery.data} />
         </Card>
       ) : null}
 
+      <Card className="mb-4">
+        <Text className="text-foreground font-semibold mb-3">Device health</Text>
+        {devicesQuery.isLoading ? <LoadingState label="Loading devices…" /> : null}
+        {devicesQuery.data && devicesQuery.data.length === 0 ? (
+          <EmptyState title="No devices paired" message="Pair a sensor node to see live health here." />
+        ) : null}
+        {devicesQuery.data && devicesQuery.data.length > 0 ? <DeviceHealthBars devices={devicesQuery.data} /> : null}
+      </Card>
+
       {responseTimesQuery.data ? (
         <Card className="mb-4">
-          <Text className="text-white font-semibold mb-3">Response times</Text>
-          <View className="flex-row justify-between mb-2">
-            <Text className="text-muted">Avg. quick disarm</Text>
-            <Text className="text-white font-medium">
-              {formatDuration(responseTimesQuery.data.avg_disarm_seconds)}
-              {responseTimesQuery.data.disarm_sample_size > 0
-                ? ` (${responseTimesQuery.data.disarm_sample_size})`
-                : ""}
-            </Text>
-          </View>
-          <View className="flex-row justify-between">
-            <Text className="text-muted">Avg. manual resolution</Text>
-            <Text className="text-white font-medium">
-              {formatDuration(responseTimesQuery.data.avg_resolution_seconds)}
-              {responseTimesQuery.data.resolved_sample_size > 0
-                ? ` (${responseTimesQuery.data.resolved_sample_size})`
-                : ""}
-            </Text>
-          </View>
+          <Text className="text-foreground font-semibold mb-3">Response times</Text>
+          <ResponseTimeBars
+            avgDisarmSeconds={responseTimesQuery.data.avg_disarm_seconds}
+            disarmSampleSize={responseTimesQuery.data.disarm_sample_size}
+            avgResolutionSeconds={responseTimesQuery.data.avg_resolution_seconds}
+            resolvedSampleSize={responseTimesQuery.data.resolved_sample_size}
+          />
         </Card>
       ) : null}
     </ScreenContainer>

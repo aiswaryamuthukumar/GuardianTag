@@ -1,10 +1,11 @@
-import { View, Text } from "react-native";
+﻿import { View, Text } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useApi } from "@/hooks/useApi";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
-import { Card, PressableCard } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
+import { ListRow } from "@/components/ui/ListRow";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { LoadingState, ErrorState } from "@/components/ui/StateViews";
 import type { IncidentDetail, IncidentStatus } from "@/types/api";
@@ -50,42 +51,45 @@ export default function IncidentDetails() {
     <ScreenContainer>
       <ScreenHeader title={incident.title} showBack />
 
-      <Card className="mb-4">
-        <View className="flex-row items-center justify-between mb-2">
-          <Badge label={incident.status.replace("_", " ")} tone={statusTone[incident.status]} />
-          <Badge label={incident.severity} tone="warning" />
-        </View>
-        {incident.description ? <Text className="text-muted mb-2">{incident.description}</Text> : null}
-        <Text className="text-muted text-xs">
-          Triggered {new Date(incident.triggered_at).toLocaleString()}
-        </Text>
-        {incident.resolved_at ? (
-          <Text className="text-muted text-xs mt-1">
-            Resolved {new Date(incident.resolved_at).toLocaleString()}
-          </Text>
+      <View className="flex-row items-center gap-2 mb-3">
+        <Badge label={incident.status.replace("_", " ")} tone={statusTone[incident.status]} />
+        <Badge label={incident.severity} tone="warning" />
+      </View>
+
+      {incident.description ? <Text className="text-foreground dark:text-white text-[15px] mb-3 leading-6">{incident.description}</Text> : null}
+
+      <Text className="text-muted dark:text-[#8A8D98] text-[13px] mb-6">
+        Triggered {new Date(incident.triggered_at).toLocaleString()}
+        {incident.resolved_at ? ` · Resolved ${new Date(incident.resolved_at).toLocaleString()}` : ""}
+      </Text>
+
+      <Card>
+        <ListRow
+          icon="clock"
+          title="Timeline"
+          subtitle={`${incident.timeline_events.length} event${incident.timeline_events.length === 1 ? "" : "s"}`}
+          onPress={() => router.push(`/(app)/incidents/${id}/timeline`)}
+          showChevron
+        />
+        <ListRow
+          icon="camera"
+          title="Evidence board"
+          subtitle={`${incident.evidence_items.length} item${incident.evidence_items.length === 1 ? "" : "s"}`}
+          onPress={() => router.push(`/(app)/incidents/${id}/evidence`)}
+          showChevron
+          isLast={!isOpen}
+        />
+        {isOpen ? (
+          <ListRow
+            icon="check-circle"
+            title="Resolve case"
+            subtitle="Close this incident out"
+            onPress={() => router.push(`/(app)/incidents/${id}/resolution`)}
+            showChevron
+            isLast
+          />
         ) : null}
       </Card>
-
-      <PressableCard onPress={() => router.push(`/(app)/incidents/${id}/timeline`)} className="mb-2">
-        <Text className="text-white font-medium">Timeline</Text>
-        <Text className="text-muted text-xs mt-0.5">
-          {incident.timeline_events.length} event{incident.timeline_events.length === 1 ? "" : "s"}
-        </Text>
-      </PressableCard>
-
-      <PressableCard onPress={() => router.push(`/(app)/incidents/${id}/evidence`)} className="mb-2">
-        <Text className="text-white font-medium">Evidence Board</Text>
-        <Text className="text-muted text-xs mt-0.5">
-          {incident.evidence_items.length} item{incident.evidence_items.length === 1 ? "" : "s"}
-        </Text>
-      </PressableCard>
-
-      {isOpen ? (
-        <PressableCard onPress={() => router.push(`/(app)/incidents/${id}/resolution`)} className="mb-2">
-          <Text className="text-white font-medium">Resolve Case</Text>
-          <Text className="text-muted text-xs mt-0.5">Close this incident out</Text>
-        </PressableCard>
-      ) : null}
     </ScreenContainer>
   );
 }

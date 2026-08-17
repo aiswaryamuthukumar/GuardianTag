@@ -1,3 +1,5 @@
+jest.mock("@/lib/demo/config", () => ({ DEMO_MODE: false }));
+
 import { apiClient, ApiError } from "@/lib/api/client";
 
 function mockFetchOnce(response: Partial<Response> & { json?: () => Promise<unknown>; text?: () => Promise<string> }) {

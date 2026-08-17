@@ -1,35 +1,45 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: "class",
   content: ["./app/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}"],
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
       colors: {
-        background: "#0B0B12",
-        surface: "#15151F",
-        "surface-alt": "#1E1E2B",
-        border: "#2A2A3A",
+        background: "#050914",
+        surface: "#0B1220",
+        "surface-alt": "#111A2E",
+        border: "#1E293B",
+        hairline: "#182338",
+        foreground: "#F1F5F9",
         primary: {
+          DEFAULT: "#3B82F6",
+          light: "#60A5FA",
+          dark: "#2563EB",
+        },
+        secondary: {
           DEFAULT: "#8B5CF6",
           light: "#A78BFA",
-          dark: "#6D28D9",
         },
         safe: {
-          DEFAULT: "#22C55E",
-          light: "#4ADE80",
-          dark: "#15803D",
+          DEFAULT: "#3EBD73",
+          light: "#6BD394",
+          dark: "#2C9257",
         },
         warning: {
-          DEFAULT: "#F97316",
-          light: "#FB923C",
-          dark: "#C2410C",
+          DEFAULT: "#D89A3E",
+          light: "#E5B466",
+          dark: "#AD7A2C",
         },
         emergency: {
-          DEFAULT: "#EF4444",
-          light: "#F87171",
-          dark: "#B91C1C",
+          DEFAULT: "#E5484D",
+          light: "#EF7A7E",
+          dark: "#B93337",
         },
-        muted: "#8B8B9E",
+        muted: {
+          DEFAULT: "#8B93A7",
+          light: "#AAB2C5",
+        },
       },
     },
   },

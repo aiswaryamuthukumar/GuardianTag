@@ -3,9 +3,11 @@ import { router } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApi } from "@/hooks/useApi";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ShieldScanner } from "@/components/ui/ShieldScanner";
 import { LoadingState, ErrorState, EmptyState } from "@/components/ui/StateViews";
 import type { Incident } from "@/types/api";
 
@@ -34,6 +36,7 @@ export default function EmergencyAlert() {
   if (openIncidentsQuery.isLoading) {
     return (
       <ScreenContainer>
+        <ScreenHeader title="Alert" showBack />
         <LoadingState />
       </ScreenContainer>
     );
@@ -42,6 +45,7 @@ export default function EmergencyAlert() {
   if (openIncidentsQuery.error) {
     return (
       <ScreenContainer>
+        <ScreenHeader title="Alert" showBack />
         <ErrorState onRetry={() => openIncidentsQuery.refetch()} />
       </ScreenContainer>
     );
@@ -50,11 +54,12 @@ export default function EmergencyAlert() {
   if (!incident) {
     return (
       <ScreenContainer>
+        <ScreenHeader title="Alert" showBack />
         <View className="flex-1 items-center justify-center py-20">
-          <View className="w-24 h-24 rounded-full bg-safe/20 items-center justify-center mb-4">
-            <Text className="text-4xl">✓</Text>
+          <ShieldScanner active tone="primary" size={110} icon="check" />
+          <View className="mt-6">
+            <EmptyState title="All clear" message="No active emergencies right now." />
           </View>
-          <EmptyState title="All clear" message="No active emergencies right now." />
         </View>
       </ScreenContainer>
     );
@@ -62,26 +67,22 @@ export default function EmergencyAlert() {
 
   return (
     <ScreenContainer>
+      <ScreenHeader title="Alert" showBack />
       <View className="items-center py-6">
-        <View className="w-24 h-24 rounded-full bg-emergency/20 items-center justify-center mb-4">
-          <Text className="text-4xl">!</Text>
-        </View>
-        <Text className="text-emergency text-2xl font-extrabold">Active Alert</Text>
+        <ShieldScanner active tone="emergency" size={120} icon="alert-triangle" fast />
+        <Text className="text-emergency-light text-[22px] font-bold mt-5">Active alert</Text>
         <Text className="text-muted mt-1">{new Date(incident.triggered_at).toLocaleString()}</Text>
       </View>
 
       <Card className="mb-4">
         <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-white font-semibold text-lg">{incident.title}</Text>
+          <Text className="text-foreground font-semibold text-lg flex-1 mr-2">{incident.title}</Text>
           <Badge label={incident.severity} tone="emergency" />
         </View>
         {incident.description ? <Text className="text-muted">{incident.description}</Text> : null}
       </Card>
 
-      <Button
-        label="View Full Incident"
-        onPress={() => router.push(`/(app)/incidents/${incident.id}`)}
-      />
+      <Button label="View Full Incident" onPress={() => router.push(`/(app)/incidents/${incident.id}`)} />
       <View className="mt-3">
         <Button
           label="Mark as False Alarm"

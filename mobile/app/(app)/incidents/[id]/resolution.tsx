@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { View, Text, TextInput } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -46,9 +46,9 @@ export default function CaseResolution() {
         </View>
       </View>
 
-      <Text className="text-white font-semibold mb-2">Resolution notes</Text>
+      <Text className="text-foreground dark:text-white font-semibold mb-2">Resolution notes</Text>
       <TextInput
-        className="bg-surface text-white rounded-xl px-4 py-3 border border-border mb-4"
+        className="bg-surface dark:bg-[#15161C] text-foreground dark:text-white rounded-xl px-4 py-3 border border-border dark:border-[#26282F] mb-4"
         placeholder="What happened, and how was it resolved?"
         placeholderTextColor="#8B8B9E"
         multiline

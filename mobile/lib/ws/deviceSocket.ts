@@ -1,3 +1,5 @@
+import { DEMO_MODE } from "@/lib/demo/config";
+
 const WS_URL = process.env.EXPO_PUBLIC_WS_URL ?? "ws://localhost:8000/ws";
 
 export type DeviceSocketMessage =
@@ -12,6 +14,12 @@ export function openDeviceSocket(
   getToken: () => Promise<string | null>,
   onMessage: (message: DeviceSocketMessage) => void,
 ): () => void {
+  if (DEMO_MODE) {
+    // No real device to stream from — the mock REST layer already reflects
+    // any state changes, so there is nothing for a socket to push.
+    return () => undefined;
+  }
+
   let socket: WebSocket | null = null;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   let closedByCaller = false;

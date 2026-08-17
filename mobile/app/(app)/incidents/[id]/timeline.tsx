@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+﻿import { View, Text } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useApi } from "@/hooks/useApi";
@@ -37,8 +37,8 @@ export default function Timeline() {
               ) : null}
             </View>
             <View className="flex-1 pb-1">
-              <Text className="text-white font-medium">{event.description}</Text>
-              <Text className="text-muted text-xs mt-0.5 capitalize">
+              <Text className="text-foreground dark:text-white font-medium">{event.description}</Text>
+              <Text className="text-muted dark:text-[#8A8D98] text-xs mt-0.5 capitalize">
                 {event.actor} · {new Date(event.occurred_at).toLocaleString()}
               </Text>
             </View>

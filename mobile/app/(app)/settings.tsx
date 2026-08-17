@@ -1,19 +1,25 @@
-import { Linking, Text, View } from "react-native";
-import { useAuth } from "@clerk/clerk-expo";
+import { useState } from "react";
+import { Linking, Text, View, Switch } from "react-native";
+import { router } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApi } from "@/hooks/useApi";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Card } from "@/components/ui/Card";
+import { ListRow } from "@/components/ui/ListRow";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { LoadingState } from "@/components/ui/StateViews";
+import { colors } from "@/constants/theme";
 import type { TelegramLinkCode, User } from "@/types/api";
 
+function SectionLabel({ label }: { label: string }) {
+  return <Text className="text-muted text-[12px] font-medium uppercase tracking-wide mb-2 ml-1">{label}</Text>;
+}
+
 export default function Settings() {
-  const { signOut } = useAuth();
   const api = useApi();
   const queryClient = useQueryClient();
+  const [pushEnabled, setPushEnabled] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   const meQuery = useQuery({ queryKey: ["me"], queryFn: () => api.get<User>("/auth/me") });
 
@@ -30,44 +36,50 @@ export default function Settings() {
 
   return (
     <ScreenContainer onRefresh={() => queryClient.invalidateQueries({ queryKey: ["me"] })}>
-      <ScreenHeader title="Settings" showBack />
+      <ScreenHeader title="Settings" showBack subtitle="Notifications, alerts and support" />
 
-      <Card className="mb-4">
-        <Text className="text-white font-semibold mb-1">Push notifications</Text>
-        <Text className="text-muted text-xs">
-          Enabled automatically once you grant notification permission — you'll get incident and
-          achievement alerts on this device even when the app is closed.
-        </Text>
+      <SectionLabel label="Notifications" />
+      <Card className="mb-6">
+        <ListRow
+          icon="bell"
+          title="Push notifications"
+          subtitle="Incident and achievement alerts"
+          right={<Switch value={pushEnabled} onValueChange={setPushEnabled} trackColor={{ false: colors.surfaceAlt, true: colors.primary }} thumbColor="#FFFFFF" />}
+        />
+        <ListRow
+          icon="volume-2"
+          title="Sound & alerts"
+          subtitle="Play a sound for critical incidents"
+          right={<Switch value={soundEnabled} onValueChange={setSoundEnabled} trackColor={{ false: colors.surfaceAlt, true: colors.primary }} thumbColor="#FFFFFF" />}
+          isLast
+        />
       </Card>
 
-      <Card className="mb-4">
-        <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-white font-semibold">Telegram emergency alerts</Text>
-          <Badge label={isLinked ? "Linked" : "Not linked"} tone={isLinked ? "safe" : "muted"} />
-        </View>
-        <Text className="text-muted text-xs mb-3">
-          {isLinked
-            ? "Critical alerts are sent to your linked Telegram chat, independent of the app."
-            : "Link a Telegram chat to also receive alerts there, even if push notifications fail."}
-        </Text>
-        {meQuery.isLoading ? (
-          <LoadingState label="Checking status..." />
-        ) : (
-          <Button
-            label={isLinked ? "Re-link Telegram" : "Link Telegram"}
-            variant="secondary"
-            onPress={() => linkMutation.mutate()}
-            loading={linkMutation.isPending}
-          />
-        )}
-        {linkMutation.isSuccess && linkMutation.data ? (
-          <Text className="text-muted text-xs mt-2">
-            Opened Telegram — if it didn't open, message the bot with: /start {linkMutation.data.link_code}
-          </Text>
-        ) : null}
+      <SectionLabel label="Emergency contacts" />
+      <Card className="mb-2">
+        <ListRow
+          icon="send"
+          title="Telegram alerts"
+          subtitle={isLinked ? "Linked to your account" : "Not linked yet"}
+          right={<Badge label={isLinked ? "Linked" : "Not linked"} tone={isLinked ? "safe" : "muted"} />}
+          onPress={() => linkMutation.mutate()}
+          showChevron
+          isLast
+        />
       </Card>
+      {linkMutation.isSuccess && linkMutation.data ? (
+        <Text className="text-muted text-[12px] mb-6 px-1">
+          Opened Telegram — if it didn't open, message the bot with: /start {linkMutation.data.link_code}
+        </Text>
+      ) : (
+        <View className="mb-6" />
+      )}
 
-      <Button label="Sign Out" variant="danger" onPress={() => signOut()} />
+      <SectionLabel label="Support" />
+      <Card>
+        <ListRow icon="help-circle" title="Help & FAQ" onPress={() => router.push("/(app)/help")} showChevron />
+        <ListRow icon="info" title="About HosDost" onPress={() => router.push("/(app)/about")} showChevron isLast />
+      </Card>
     </ScreenContainer>
   );
 }

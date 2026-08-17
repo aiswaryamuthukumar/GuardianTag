@@ -1,7 +1,7 @@
-import { View, Text } from "react-native";
+import { View, Text, Button } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
+import { useClerk, useUser } from "@clerk/clerk-expo";
 import { useApi } from "@/hooks/useApi";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { StatTile } from "@/components/ui/StatTile";
@@ -12,6 +12,7 @@ import type { AnalyticsSummary, Device, SecurityScore } from "@/types/api";
 
 export default function Home() {
   const api = useApi();
+  const { signOut } = useClerk();
   const { user } = useUser();
 
   const devicesQuery = useQuery({
@@ -46,6 +47,10 @@ export default function Home() {
 
   return (
     <ScreenContainer onRefresh={() => devicesQuery.refetch()} refreshing={devicesQuery.isRefetching}>
+      <Button 
+        title="Logout (Dev)" 
+        onPress={() => signOut()} 
+      />
       <Text className="text-muted mt-2">Welcome back</Text>
       <Text className="text-2xl font-bold text-white mb-4">
         {user?.firstName ?? "Guardian"}

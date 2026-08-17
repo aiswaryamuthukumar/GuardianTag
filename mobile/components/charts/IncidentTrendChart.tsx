@@ -59,7 +59,7 @@ export function IncidentTrendChart({ data }: { data: DailyIncidentCount[] }) {
           const isSelected = shown?.date === d.date;
           return (
             <Path
-              key={d.date}
+              key={`path-${d.date}`}
               d={roundedTopBarPath(x, y, barWidth, barHeight, BAR_RADIUS)}
               fill={isSelected ? colors.primary : colors.primaryDark}
               opacity={d.count === 0 ? 0.3 : 1}
@@ -71,7 +71,7 @@ export function IncidentTrendChart({ data }: { data: DailyIncidentCount[] }) {
       {/* Invisible touch targets, one per bar - SVG itself doesn't handle RN touch events per-shape. */}
       <View className="flex-row absolute inset-0" style={{ height: CHART_HEIGHT }}>
         {data.map((d) => (
-          <Pressable key={d.date} className="flex-1" onPress={() => setSelected(d)} />
+          <Pressable key={`bar-${d.date}`} className="flex-1" onPress={() => setSelected(d)} />
         ))}
       </View>
 

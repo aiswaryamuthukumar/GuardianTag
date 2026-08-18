@@ -33,9 +33,9 @@ export default function DevicePairing() {
 
   return (
     <ScreenContainer>
-      <ScreenHeader title="Pair a Device" showBack subtitle="Connect a new ESP32 sensor node" />
+      <ScreenHeader title="Pair a Device" showBack subtitle="Connect a new sensor" />
 
-      <Text className="text-muted dark:text-[#8A8D98] mb-1">The pairing code is shown on the device's setup screen or printed on its label.</Text>
+      <Text className="text-muted dark:text-[#8A8D98] mb-1">Find the code on the device label.</Text>
 
       <View className="mt-4">
         <Text className="text-foreground dark:text-white mb-1 mt-3">Device name</Text>

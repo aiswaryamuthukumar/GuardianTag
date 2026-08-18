@@ -124,7 +124,7 @@ export default function Home() {
           {devicesQuery.data && devicesQuery.data.length === 0 ? (
             <EmptyState
               title="No devices paired yet"
-              message="Pair a sensor node to start guarding your assets."
+              message="Pair a device to get started."
               actionLabel="Pair a device"
               onAction={() => router.push("/(app)/device-pairing")}
             />

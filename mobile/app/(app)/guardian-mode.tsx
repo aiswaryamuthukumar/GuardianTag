@@ -68,7 +68,7 @@ export default function GuardianMode() {
           </View>
 
           {assets.length === 0 ? (
-            <EmptyState title="No assets to guard" message="Add an asset first from the Assets tab." />
+            <EmptyState title="No assets to guard" message="Add an asset first." />
           ) : (
             <Card className="mb-5">
               {assets.map((asset, i) => (

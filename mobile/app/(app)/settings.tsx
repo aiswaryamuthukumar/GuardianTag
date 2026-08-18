@@ -36,7 +36,7 @@ export default function Settings() {
 
   return (
     <ScreenContainer onRefresh={() => queryClient.invalidateQueries({ queryKey: ["me"] })}>
-      <ScreenHeader title="Settings" showBack subtitle="Notifications, alerts and support" />
+      <ScreenHeader title="Settings" showBack subtitle="Alerts and app options" />
 
       <SectionLabel label="Notifications" />
       <Card className="mb-6">
@@ -69,7 +69,7 @@ export default function Settings() {
       </Card>
       {linkMutation.isSuccess && linkMutation.data ? (
         <Text className="text-muted text-[12px] mb-6 px-1">
-          Opened Telegram — if it didn't open, message the bot with: /start {linkMutation.data.link_code}
+          Opened Telegram. Or send /start {linkMutation.data.link_code} to the bot.
         </Text>
       ) : (
         <View className="mb-6" />

@@ -1,12 +1,11 @@
 type Listener = () => void;
 
 let signedIn = false;
-let hydrated = false;
-let snapshot = { signedIn, hydrated };
+let snapshot = { signedIn };
 const listeners = new Set<Listener>();
 
 function emit() {
-  snapshot = { signedIn, hydrated };
+  snapshot = { signedIn };
   listeners.forEach((l) => l());
 }
 
@@ -22,10 +21,6 @@ export const demoSession = {
   },
   signOut() {
     signedIn = false;
-    emit();
-  },
-  markHydrated() {
-    hydrated = true;
     emit();
   },
 };

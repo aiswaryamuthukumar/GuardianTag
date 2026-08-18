@@ -25,7 +25,7 @@ export default function DeviceHealth() {
 
   return (
     <ScreenContainer onRefresh={() => devicesQuery.refetch()} refreshing={devicesQuery.isRefetching}>
-      <ScreenHeader title="Device Health" showBack subtitle="Live status of your sensor nodes" />
+      <ScreenHeader title="Device Health" showBack subtitle="Your device status" />
 
       {devicesQuery.isLoading ? <LoadingState /> : null}
       {devicesQuery.error ? (

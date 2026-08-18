@@ -23,7 +23,7 @@ export default function HostelMap() {
 
   return (
     <ScreenContainer onRefresh={() => devicesQuery.refetch()} refreshing={devicesQuery.isRefetching}>
-      <ScreenHeader title="Hostel Map" showBack subtitle="Where your guardians are stationed" />
+      <ScreenHeader title="Hostel Map" showBack subtitle="Where your devices are" />
 
       {(meQuery.isLoading || devicesQuery.isLoading) ? <LoadingState /> : null}
       {(meQuery.error || devicesQuery.error) ? (
@@ -33,7 +33,7 @@ export default function HostelMap() {
       {meQuery.data ? (
         <Card className="mb-4">
           <Text className="text-foreground dark:text-white font-semibold">Your room</Text>
-          <Text className="text-muted dark:text-[#8A8D98] mt-1">{meQuery.data.room_number ?? "Not set — add it in Profile"}</Text>
+          <Text className="text-muted dark:text-[#8A8D98] mt-1">{meQuery.data.room_number ?? "Not set. Add it in Profile."}</Text>
         </Card>
       ) : null}
 
@@ -52,8 +52,7 @@ export default function HostelMap() {
       ))}
 
       <Text className="text-muted dark:text-[#8A8D98] text-center mt-6">
-        A full interactive floor plan is on the roadmap — for now, devices are grouped by the room
-        on your profile.
+        Full floor map coming soon.
       </Text>
     </ScreenContainer>
   );

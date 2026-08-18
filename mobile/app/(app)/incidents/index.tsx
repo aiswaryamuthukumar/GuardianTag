@@ -7,6 +7,8 @@ import { useApi } from "@/hooks/useApi";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
+import { IconAvatar } from "@/components/ui/IconAvatar";
 import { LoadingState, ErrorState, EmptyState } from "@/components/ui/StateViews";
 import { colors } from "@/constants/theme";
 import type { Incident, IncidentSeverity, IncidentStatus } from "@/types/api";
@@ -16,6 +18,20 @@ const severityColor: Record<IncidentSeverity, string> = {
   medium: colors.warning,
   high: colors.emergency,
   critical: colors.emergency,
+};
+
+const severityTone: Record<IncidentSeverity, "safe" | "warning" | "emergency"> = {
+  low: "safe",
+  medium: "warning",
+  high: "emergency",
+  critical: "emergency",
+};
+
+const severityIcon: Record<IncidentSeverity, keyof typeof import("@expo/vector-icons").Feather.glyphMap> = {
+  low: "shield",
+  medium: "alert-circle",
+  high: "alert-triangle",
+  critical: "alert-triangle",
 };
 
 const statusLabel: Record<IncidentStatus, string> = {
@@ -58,7 +74,7 @@ export default function Incidents() {
 
   return (
     <ScreenContainer onRefresh={() => incidentsQuery.refetch()} refreshing={incidentsQuery.isRefetching}>
-      <ScreenHeader title="Cases" subtitle="Everything your guardians have flagged" />
+      <ScreenHeader title="Cases" subtitle="All your cases" />
 
       <View className="flex-row items-center bg-surface dark:bg-[#15161C] border border-border dark:border-[#26282F] rounded-xl px-3 mb-3">
         <Feather name="search" size={16} color={colors.muted} />
@@ -100,36 +116,42 @@ export default function Incidents() {
       {incidentsQuery.data && filtered.length === 0 ? (
         <EmptyState
           title="No matching cases"
-          message={incidentsQuery.data.length === 0 ? "Nothing has been flagged yet — that's a good thing." : "Try a different search or filter."}
+          message={incidentsQuery.data.length === 0 ? "No cases yet. That's good." : "Try a different search or filter."}
         />
       ) : null}
 
-      <View>
-        {filtered.map((incident, i) => (
-          <Pressable
-            key={incident.id}
-            onPress={() => router.push(`/(app)/incidents/${incident.id}`)}
-            className={`flex-row py-4 ${i === filtered.length - 1 ? "" : "border-b border-hairline"}`}
-          >
-            <View className="items-center mr-3 pt-1">
-              <View className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: severityColor[incident.severity] }} />
-              {i < filtered.length - 1 ? <View className="w-px flex-1 bg-hairline mt-2" /> : null}
-            </View>
-            <View className="flex-1 pb-2">
-              <View className="flex-row items-start justify-between mb-1.5">
-                <Text className="text-foreground text-[15px] font-semibold flex-1 mr-2">{incident.title}</Text>
-                <Feather name="chevron-right" size={16} color={colors.muted} />
-              </View>
-              <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center gap-2">
-                  <Badge label={statusLabel[incident.status]} tone={statusTone[incident.status]} />
-                  <Text className="text-muted text-[12px] capitalize">{incident.severity} severity</Text>
+      <View className="gap-3">
+        {filtered.map((incident) => (
+          <Pressable key={incident.id} onPress={() => router.push(`/(app)/incidents/${incident.id}`)}>
+            <Card className="py-4">
+              <View className="flex-row items-start">
+                <IconAvatar icon={severityIcon[incident.severity]} tone={severityTone[incident.severity]} size={44} />
+                <View className="flex-1 ml-3">
+                  <View className="flex-row items-start justify-between">
+                    <Text className="text-foreground text-[16px] font-semibold flex-1 mr-2" numberOfLines={2}>
+                      {incident.title}
+                    </Text>
+                    <Feather name="chevron-right" size={18} color={colors.muted} />
+                  </View>
+
+                  <View className="flex-row items-center gap-2 mt-2">
+                    <Badge label={statusLabel[incident.status]} tone={statusTone[incident.status]} />
+                    <View className="flex-row items-center">
+                      <View className="w-1.5 h-1.5 rounded-full mr-1.5" style={{ backgroundColor: severityColor[incident.severity] }} />
+                      <Text className="text-muted text-[12px] capitalize">{incident.severity}</Text>
+                    </View>
+                  </View>
+
+                  <View className="flex-row items-center mt-2.5 pt-2.5 border-t border-hairline">
+                    <Feather name="clock" size={12} color={colors.muted} style={{ marginRight: 5 }} />
+                    <Text className="text-muted text-[12px]">
+                      {new Date(incident.triggered_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })} ·{" "}
+                      {new Date(incident.triggered_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                    </Text>
+                  </View>
                 </View>
-                <Text className="text-muted text-[12px]">
-                  {new Date(incident.triggered_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                </Text>
               </View>
-            </View>
+            </Card>
           </Pressable>
         ))}
       </View>

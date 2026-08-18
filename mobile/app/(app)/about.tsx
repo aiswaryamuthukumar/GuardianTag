@@ -15,12 +15,12 @@ export default function About() {
         <Text className="text-muted dark:text-[#8A8D98] text-[13px] mt-1">Version 1.0.0 (Demo build)</Text>
       </View>
       <Card>
-        <ListRow icon="shield" title="Smart Security" subtitle="Sensor-backed asset monitoring" />
-        <ListRow icon="zap" title="Instant Alerts" subtitle="Real-time incident detection" />
-        <ListRow icon="award" title="Guardian Rewards" subtitle="XP, streaks and achievements" isLast />
+        <ListRow icon="shield" title="Guardian Mode" subtitle="Arm and monitor your assets" />
+        <ListRow icon="zap" title="Instant alerts" subtitle="Get notified right away" />
+        <ListRow icon="award" title="Rewards" subtitle="XP, streaks and badges" isLast />
       </Card>
       <Text className="text-muted dark:text-[#8A8D98] text-[12px] text-center mt-6">
-        Built for hostel residents to keep their belongings safe.
+        Keeps your things safe in the hostel.
       </Text>
     </ScreenContainer>
   );

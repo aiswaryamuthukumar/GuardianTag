@@ -83,7 +83,7 @@ export default function GuardianXP() {
 
       <Text className="text-foreground dark:text-white font-semibold text-[17px] mb-2">Recent XP</Text>
       {xpQuery.data && xpQuery.data.length === 0 ? (
-        <EmptyState title="No XP yet" message="Complete challenges and keep your assets guarded to earn XP." />
+        <EmptyState title="No XP yet" message="Arm your assets to start earning." />
       ) : null}
       {xpQuery.data && xpQuery.data.length > 0 ? (
         <Card>

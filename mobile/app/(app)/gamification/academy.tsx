@@ -6,30 +6,30 @@ import { Card } from "@/components/ui/Card";
 const lessons = [
   {
     title: "Arm before you leave",
-    body: "Guardian Mode only protects assets you've explicitly armed. Get in the habit of arming your bag every time you step away.",
+    body: "Only armed assets are protected. Arm your bag every time you step away.",
   },
   {
-    title: "Understand the disarm window",
-    body: "When your device detects movement, you get a short window to disarm before an alert fires. Moving your own bag? Disarm quickly from the device or the app.",
+    title: "Know the disarm window",
+    body: "You get a short window to disarm before an alert fires.",
   },
   {
-    title: "False alarms still matter",
-    body: "Marking an alert as a false alarm helps keep your incident history accurate and doesn't count against you.",
+    title: "False alarms are okay",
+    body: "Marking a false alarm doesn't hurt your score.",
   },
   {
-    title: "Keep your device charged",
-    body: "A dead sensor node can't protect anything. Check Device Health regularly, especially before trips.",
+    title: "Keep devices charged",
+    body: "Check Device Health before trips.",
   },
   {
-    title: "Review incidents together",
-    body: "Use the Timeline and Evidence Board to understand exactly what happened before resolving a case.",
+    title: "Check the timeline",
+    body: "Review the timeline and evidence before resolving a case.",
   },
 ];
 
 export default function GuardianAcademy() {
   return (
     <ScreenContainer>
-      <ScreenHeader title="Guardian Academy" showBack subtitle="Habits that keep you safe" />
+      <ScreenHeader title="Guardian Academy" showBack subtitle="Tips to stay safe" />
 
       <Card>
         {lessons.map((lesson, i) => (

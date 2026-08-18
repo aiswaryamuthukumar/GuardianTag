@@ -25,7 +25,7 @@ export function useAppAuth() {
 
   if (DEMO_MODE) {
     return {
-      isLoaded: session.hydrated,
+      isLoaded: true,
       isSignedIn: session.signedIn,
       getToken: async () => null,
       signOut: async () => demoSession.signOut(),
@@ -48,7 +48,7 @@ export function useAppUser() {
   const session = useSyncExternalStore(demoSession.subscribe, demoSession.getSnapshot);
 
   if (DEMO_MODE) {
-    return { isLoaded: session.hydrated, isSignedIn: session.signedIn, user: developmentMockUser };
+    return { isLoaded: true, isSignedIn: session.signedIn, user: developmentMockUser };
   }
 
   const clerkUser = useUser();

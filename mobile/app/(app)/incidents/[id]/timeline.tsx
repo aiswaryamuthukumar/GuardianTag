@@ -24,7 +24,7 @@ export default function Timeline() {
       {incidentQuery.error ? <ErrorState onRetry={() => incidentQuery.refetch()} /> : null}
 
       {incidentQuery.data && incidentQuery.data.timeline_events.length === 0 ? (
-        <EmptyState title="No timeline events" message="Nothing has been logged for this incident yet." />
+        <EmptyState title="No timeline events" message="Nothing logged yet." />
       ) : null}
 
       <View className="pl-2">

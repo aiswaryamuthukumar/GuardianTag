@@ -50,7 +50,7 @@ export default function Analytics() {
 
   return (
     <ScreenContainer onRefresh={() => summaryQuery.refetch()} refreshing={summaryQuery.isRefetching}>
-      <ScreenHeader title="Analytics" showBack subtitle="How your guardians are doing" />
+      <ScreenHeader title="Analytics" showBack subtitle="Your security stats" />
 
       {loading ? <LoadingState /> : null}
       {error ? <ErrorState message={(error as Error).message} onRetry={() => summaryQuery.refetch()} /> : null}
@@ -93,7 +93,7 @@ export default function Analytics() {
         <Text className="text-foreground font-semibold mb-3">Device health</Text>
         {devicesQuery.isLoading ? <LoadingState label="Loading devices…" /> : null}
         {devicesQuery.data && devicesQuery.data.length === 0 ? (
-          <EmptyState title="No devices paired" message="Pair a sensor node to see live health here." />
+          <EmptyState title="No devices paired" message="Pair a device to see health." />
         ) : null}
         {devicesQuery.data && devicesQuery.data.length > 0 ? <DeviceHealthBars devices={devicesQuery.data} /> : null}
       </Card>

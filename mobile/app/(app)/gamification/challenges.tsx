@@ -17,7 +17,7 @@ export default function Challenges() {
 
   return (
     <ScreenContainer onRefresh={() => challengesQuery.refetch()} refreshing={challengesQuery.isRefetching}>
-      <ScreenHeader title="Challenges" showBack subtitle="Build positive security habits" />
+      <ScreenHeader title="Challenges" showBack subtitle="Complete these for XP" />
 
       {challengesQuery.isLoading ? <LoadingState /> : null}
       {challengesQuery.error ? (
@@ -25,7 +25,7 @@ export default function Challenges() {
       ) : null}
 
       {challengesQuery.data && challengesQuery.data.length === 0 ? (
-        <EmptyState title="No active challenges" message="New challenges are added periodically." />
+        <EmptyState title="No active challenges" message="New challenges coming soon." />
       ) : null}
 
       {challengesQuery.data && challengesQuery.data.length > 0 ? (

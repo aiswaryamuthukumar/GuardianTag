@@ -52,7 +52,7 @@ export default function RewardsHub() {
 
   return (
     <ScreenContainer>
-      <ScreenHeader title="Rewards" subtitle="Level up by staying vigilant" />
+      <ScreenHeader title="Rewards" subtitle="Your XP and badges" />
 
       {scoreQuery.isLoading ? <LoadingState /> : null}
 

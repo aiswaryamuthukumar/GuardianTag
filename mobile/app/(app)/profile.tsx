@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, TextInput, Alert } from "react-native";
+import { View, Text, TextInput } from "react-native";
 import { router } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApi } from "@/hooks/useApi";
@@ -58,13 +58,6 @@ export default function Profile() {
     onSuccess: (updated) => queryClient.setQueryData(["me"], updated),
   });
 
-  const confirmSignOut = () => {
-    Alert.alert("Sign out", "You'll return to the login screen.", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Sign out", style: "destructive", onPress: () => signOut() },
-    ]);
-  };
-
   if (meQuery.isLoading) {
     return (
       <ScreenContainer>
@@ -87,7 +80,7 @@ export default function Profile() {
 
   return (
     <ScreenContainer>
-      <ScreenHeader title="Profile" showBack subtitle="Your account and guardian stats" />
+      <ScreenHeader title="Profile" showBack subtitle="Your account" />
 
       <View className="items-center mb-5">
         <View className="w-20 h-20 rounded-full bg-surface-alt border border-border items-center justify-center mb-3">
@@ -148,7 +141,7 @@ export default function Profile() {
       </Card>
 
       <Card>
-        <ListRow icon="log-out" title="Sign out" onPress={confirmSignOut} tone="emergency" isLast />
+        <ListRow icon="log-out" title="Sign out" onPress={() => signOut()} tone="emergency" isLast />
       </Card>
     </ScreenContainer>
   );

@@ -17,7 +17,7 @@ const colorFor: Record<DeviceStatus, string> = {
   unpaired: colors.muted,
 };
 
-function PulseDot({ color, live }: { color: string; live: boolean }) {
+export function PulseDot({ color, live }: { color: string; live: boolean }) {
   const pulse = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (!live) return;
@@ -53,7 +53,7 @@ function PulseDot({ color, live }: { color: string; live: boolean }) {
 
 function DeviceBar({ device, index, isLast }: { device: Device; index: number; isLast: boolean }) {
   const anim = useRef(new Animated.Value(0)).current;
-  const signal = signalFor[device.status];
+  const signal = device.battery_percent != null ? device.battery_percent / 100 : signalFor[device.status];
 
   useEffect(() => {
     Animated.timing(anim, { toValue: signal, duration: 700, delay: index * 100, useNativeDriver: false }).start();
@@ -66,7 +66,10 @@ function DeviceBar({ device, index, isLast }: { device: Device; index: number; i
           <PulseDot color={colorFor[device.status]} live={device.status === "online"} />
           <Text className="text-foreground text-[14px] font-medium ml-2">{device.name}</Text>
         </View>
-        <Text className="text-muted text-[12px] capitalize">{device.status}</Text>
+        <Text className="text-muted text-[12px] capitalize">
+          {device.status}
+          {device.battery_percent != null ? ` · ${device.battery_percent}%` : ""}
+        </Text>
       </View>
       <View className="h-1.5 rounded-full bg-surface-alt overflow-hidden">
         <Animated.View

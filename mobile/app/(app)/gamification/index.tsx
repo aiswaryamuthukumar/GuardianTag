@@ -7,16 +7,17 @@ import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Card } from "@/components/ui/Card";
 import { ListRow } from "@/components/ui/ListRow";
+import { PulseOnChange } from "@/components/ui/PulseOnChange";
 import { LoadingState } from "@/components/ui/StateViews";
+import { SecurityHeatmap } from "@/components/charts/SecurityHeatmap";
 import { guardianLevels, type GuardianLevelLabel } from "@/constants/theme";
-import type { GuardianLevel, SecurityScore } from "@/types/api";
+import type { GuardianLevel, HeatmapDay, SecurityScore } from "@/types/api";
 
 const levelLabels: Record<GuardianLevel, GuardianLevelLabel> = {
-  rookie: "Rookie",
-  watchman: "Watchman",
-  guardian: "Guardian",
-  sentinel: "Sentinel",
-  hostel_protector: "Hostel Protector",
+  rookie_guardian: "Rookie Guardian",
+  alert_guardian: "Alert Guardian",
+  protector: "Protector",
+  guardian_pro: "Guardian Pro",
 };
 
 function ProgressSegment({ index, filled }: { index: number; filled: boolean }) {
@@ -47,6 +48,10 @@ export default function RewardsHub() {
     queryKey: ["security-score"],
     queryFn: () => api.get<SecurityScore>("/gamification/security-score"),
   });
+  const heatmapQuery = useQuery({
+    queryKey: ["security-heatmap"],
+    queryFn: () => api.get<HeatmapDay[]>("/analytics/security-heatmap?days=28"),
+  });
 
   const levelIndex = scoreQuery.data ? guardianLevels.indexOf(levelLabels[scoreQuery.data.level]) : -1;
 
@@ -61,7 +66,9 @@ export default function RewardsHub() {
           <View className="flex-row items-end justify-between mb-3">
             <View>
               <Text className="text-foreground dark:text-white font-semibold text-[18px]">{levelLabels[scoreQuery.data.level]}</Text>
-              <Text className="text-muted dark:text-[#8A8D98] text-[13px] mt-0.5">{scoreQuery.data.score} XP · {scoreQuery.data.streak_days} day streak</Text>
+              <PulseOnChange value={`${scoreQuery.data.score}-${scoreQuery.data.streak_days}`}>
+                <Text className="text-muted dark:text-[#8A8D98] text-[13px] mt-0.5">{scoreQuery.data.score} XP · {scoreQuery.data.streak_days} day streak</Text>
+              </PulseOnChange>
             </View>
             <Text className="text-primary-light text-[13px]">
               {levelIndex + 1}/{guardianLevels.length}
@@ -72,6 +79,13 @@ export default function RewardsHub() {
               <ProgressSegment key={level} index={index} filled={index <= levelIndex} />
             ))}
           </View>
+        </Card>
+      ) : null}
+
+      {heatmapQuery.data && heatmapQuery.data.length > 0 ? (
+        <Card className="mb-6">
+          <Text className="text-foreground font-semibold mb-3">Security activity, last 28 days</Text>
+          <SecurityHeatmap days={heatmapQuery.data} />
         </Card>
       ) : null}
 

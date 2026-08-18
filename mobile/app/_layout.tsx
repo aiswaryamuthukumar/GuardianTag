@@ -10,6 +10,7 @@ import { colors } from "@/constants/theme";
 import { AuthGate } from "@/components/AuthGate";
 import { DeviceSocketsProvider } from "@/components/DeviceSocketsProvider";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { ToastHost } from "@/components/ui/ToastHost";
 import { setupOnlineManager } from "@/lib/offline/onlineManager";
 import { PERSIST_MAX_AGE_MS, queryPersister } from "@/lib/offline/persister";
 import { DEMO_MODE } from "@/lib/demo/config";
@@ -51,6 +52,8 @@ export default function RootLayout() {
             screenOptions={{
               headerShown: false,
               contentStyle: { backgroundColor: colors.background },
+              animation: "slide_from_right",
+              animationDuration: 220,
             }}
           >
             <Stack.Screen name="index" />
@@ -58,6 +61,7 @@ export default function RootLayout() {
             <Stack.Screen name="(app)" />
           </Stack>
         </DeviceSocketsProvider>
+        <ToastHost />
       </AuthGate>
     </PersistQueryClientProvider>
   );

@@ -1,4 +1,4 @@
-﻿import { View, Text } from "react-native";
+import { View, Text } from "react-native";
 import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useApi } from "@/hooks/useApi";
@@ -7,6 +7,8 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Card, PressableCard } from "@/components/ui/Card";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { LoadingState, ErrorState, EmptyState } from "@/components/ui/StateViews";
+import { PulseDot } from "@/components/charts/DeviceHealthBars";
+import { colors } from "@/constants/theme";
 import type { Device, DeviceStatus } from "@/types/api";
 
 const statusTone: Record<DeviceStatus, BadgeTone> = {
@@ -14,6 +16,13 @@ const statusTone: Record<DeviceStatus, BadgeTone> = {
   offline: "muted",
   degraded: "warning",
   unpaired: "muted",
+};
+
+const statusColor: Record<DeviceStatus, string> = {
+  online: colors.safe,
+  degraded: colors.warning,
+  offline: colors.muted,
+  unpaired: colors.muted,
 };
 
 export default function DeviceHealth() {
@@ -41,14 +50,20 @@ export default function DeviceHealth() {
       ) : null}
 
       {devicesQuery.data?.map((device) => (
-        <Card key={device.id} className="mb-2">
+        <Card key={device.id} className={`mb-2 ${device.status === "offline" ? "opacity-50" : ""}`}>
           <View className="flex-row items-center justify-between mb-2">
-            <Text className="text-foreground dark:text-white font-medium">{device.name}</Text>
-            <Badge label={device.status} tone={statusTone[device.status]} />
+            <View className="flex-row items-center">
+              <PulseDot color={statusColor[device.status]} live={device.status === "online"} />
+              <Text className="text-foreground dark:text-white font-medium ml-2">{device.name}</Text>
+            </View>
+            <Badge label={device.status === "offline" ? "Connection Lost" : device.status} tone={statusTone[device.status]} />
           </View>
           <Text className="text-muted dark:text-[#8A8D98] text-xs">Device ID: {device.device_uid}</Text>
           <Text className="text-muted dark:text-[#8A8D98] text-xs mt-1">
             Firmware: {device.firmware_version ?? "unknown"}
+          </Text>
+          <Text className="text-muted dark:text-[#8A8D98] text-xs mt-1">
+            Battery: {device.battery_percent ?? "—"}% · Signal: {device.signal_strength ?? "—"}%
           </Text>
           <Text className="text-muted dark:text-[#8A8D98] text-xs mt-1">
             Last seen:{" "}

@@ -1,26 +1,35 @@
 import { useState } from "react";
 import { View, Text, TextInput, Pressable } from "react-native";
+import { useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
 import { Logo } from "@/components/ui/Logo";
 import { colors } from "@/constants/theme";
 import { demoSession } from "@/lib/demo/session";
-
-const DEMO_EMAIL = "demo@hosdost.app";
-const DEMO_PASSWORD = "HosDost@123";
+import { DEMO_ACCOUNTS, switchAccount } from "@/lib/demo/mockStore";
 
 export default function Login() {
+  const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   const onSignIn = () => {
-    if (email.trim().toLowerCase() === DEMO_EMAIL && password === DEMO_PASSWORD) {
+    const account = DEMO_ACCOUNTS[email.trim().toLowerCase()];
+    if (account && account.password === password) {
       setError("");
+      switchAccount(account.id);
+      queryClient.clear();
       demoSession.signIn();
     } else {
       setError("Wrong email or password.");
     }
+  };
+
+  const onGuest = () => {
+    switchAccount("aiswarya");
+    queryClient.clear();
+    demoSession.signIn();
   };
 
   return (
@@ -61,7 +70,7 @@ export default function Login() {
       </Pressable>
 
       <Text className="text-muted text-[12px] text-center mt-3">
-        Demo login: {DEMO_EMAIL} / {DEMO_PASSWORD}
+        Demo: aiswarya@hosdost.demo or student@hosdost.demo / demo123
       </Text>
 
       <View className="flex-row items-center my-5">
@@ -70,7 +79,7 @@ export default function Login() {
         <View className="flex-1 h-px bg-border" />
       </View>
 
-      <Pressable className="bg-surface-alt border border-border rounded-xl py-4 items-center" onPress={() => demoSession.signIn()}>
+      <Pressable className="bg-surface-alt border border-border rounded-xl py-4 items-center" onPress={onGuest}>
         <Text className="text-foreground font-semibold text-[15px]">Continue as Guest</Text>
       </Pressable>
     </View>

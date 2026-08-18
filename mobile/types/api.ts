@@ -1,4 +1,4 @@
-export type GuardianLevel = "rookie" | "watchman" | "guardian" | "sentinel" | "hostel_protector";
+export type GuardianLevel = "rookie_guardian" | "alert_guardian" | "protector" | "guardian_pro";
 export type DeviceStatus = "unpaired" | "online" | "offline" | "degraded";
 export type AssetCategory = "bag" | "laptop" | "document" | "other";
 export type SensorEventType = "movement" | "hall_trigger" | "dual_verified" | "disarmed" | "heartbeat";
@@ -37,6 +37,8 @@ export interface Device {
   status: DeviceStatus;
   firmware_version: string | null;
   last_seen_at: string | null;
+  battery_percent: number | null;
+  signal_strength: number | null;
 }
 
 export interface Asset {
@@ -181,4 +183,33 @@ export interface AssetCoverage {
   total_assets: number;
   armed_assets: number;
   coverage_percent: number;
+}
+
+export interface DailyCheck {
+  done_today: boolean;
+  streak_days: number;
+  xp_reward: number;
+}
+
+export interface WeeklySummary {
+  xp_gained: number;
+  streak_days: number;
+  alerts: number;
+  resolved_cases: number;
+  protected_devices: number;
+}
+
+export interface HeatmapDay {
+  date: string;
+  alert: boolean;
+  resolved: boolean;
+  checked: boolean;
+}
+
+export interface AlertTimelineEntry {
+  id: string;
+  triggered_at: string;
+  device_name: string;
+  severity: IncidentSeverity;
+  status: IncidentStatus;
 }

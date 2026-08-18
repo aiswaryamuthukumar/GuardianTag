@@ -76,9 +76,14 @@ export default function Settings() {
       )}
 
       <SectionLabel label="Support" />
-      <Card>
+      <Card className="mb-6">
         <ListRow icon="help-circle" title="Help & FAQ" onPress={() => router.push("/(app)/help")} showChevron />
         <ListRow icon="info" title="About HosDost" onPress={() => router.push("/(app)/about")} showChevron isLast />
+      </Card>
+
+      <SectionLabel label="Demo" />
+      <Card>
+        <ListRow icon="sliders" title="Demo Controls" subtitle="Trigger live demo actions" onPress={() => router.push("/(app)/demo-controls")} showChevron isLast />
       </Card>
     </ScreenContainer>
   );

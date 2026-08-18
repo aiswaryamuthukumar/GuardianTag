@@ -1,5 +1,5 @@
 ﻿import { View, Text, Pressable } from "react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useApi } from "@/hooks/useApi";
@@ -12,7 +12,9 @@ import { Card } from "@/components/ui/Card";
 import { BrandHeader } from "@/components/ui/BrandHeader";
 import { LoadingState, ErrorState, EmptyState } from "@/components/ui/StateViews";
 import { colors } from "@/constants/theme";
-import type { AnalyticsSummary, Device, Notification, SecurityScore } from "@/types/api";
+import { toastBus } from "@/lib/demo/toast";
+import { takeLastUnlock } from "@/lib/demo/mockStore";
+import type { AnalyticsSummary, DailyCheck, Device, Notification, SecurityScore } from "@/types/api";
 
 const quickActions = [
   { key: "guard", label: "Guardian", icon: "shield" as const, href: "/(app)/guardian-mode" as const },
@@ -23,7 +25,39 @@ const quickActions = [
 
 export default function Home() {
   const api = useApi();
+  const queryClient = useQueryClient();
   const { user } = useAppUser();
+
+  const dailyCheckQuery = useQuery({
+    queryKey: ["daily-check"],
+    queryFn: () => api.get<DailyCheck>("/gamification/daily-check"),
+  });
+  const dailyCheckMutation = useMutation({
+    mutationFn: () => api.post<DailyCheck>("/gamification/daily-check"),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["daily-check"], data);
+      queryClient.invalidateQueries({ queryKey: ["security-score"] });
+      queryClient.invalidateQueries({ queryKey: ["xp-transactions"] });
+      toastBus.show({
+        icon: "check-circle",
+        title: `Check Complete +${data.xp_reward} XP`,
+        subtitle: `${data.streak_days}-day streak`,
+        tone: "safe",
+      });
+      const unlock = takeLastUnlock();
+      if (unlock) {
+        setTimeout(
+          () =>
+            toastBus.show({
+              icon: "award",
+              title: unlock.type === "level" ? `Level Up: ${unlock.label}` : "Achievement Unlocked!",
+              tone: "primary",
+            }),
+          1900,
+        );
+      }
+    },
+  });
 
   const devicesQuery = useQuery({
     queryKey: ["devices"],
@@ -49,7 +83,14 @@ export default function Home() {
   const isProtected = openIncidents === 0;
 
   return (
-    <ScreenContainer onRefresh={() => devicesQuery.refetch()} refreshing={devicesQuery.isRefetching}>
+    <ScreenContainer
+      onRefresh={() =>
+        devicesQuery.refetch().then(() =>
+          toastBus.show({ icon: "shield", title: "Guardian status updated", tone: "primary" }),
+        )
+      }
+      refreshing={devicesQuery.isRefetching}
+    >
       <View className="flex-row items-center justify-between mt-2 mb-6">
         <BrandHeader size={34} />
         <View className="flex-row items-center gap-2">
@@ -103,6 +144,40 @@ export default function Home() {
               accent={openIncidents > 0 ? "text-emergency-light" : "text-safe-light"}
             />
           </StatRow>
+
+          {dailyCheckQuery.data ? (
+            <Card className="mb-6">
+              <View className="flex-row items-center mb-3">
+                <View
+                  className="w-11 h-11 rounded-full items-center justify-center mr-3"
+                  style={{ backgroundColor: dailyCheckQuery.data.done_today ? "rgba(105,215,184,0.16)" : colors.surfaceAlt }}
+                >
+                  <Feather
+                    name={dailyCheckQuery.data.done_today ? "check-circle" : "shield"}
+                    size={20}
+                    color={dailyCheckQuery.data.done_today ? colors.primary : colors.muted}
+                  />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-foreground font-semibold text-[15px]">Today's Guardian Check</Text>
+                  <Text className="text-muted text-[12px] mt-0.5">
+                    {dailyCheckQuery.data.done_today
+                      ? `Done · ${dailyCheckQuery.data.streak_days}-day streak`
+                      : `+${dailyCheckQuery.data.xp_reward} XP · keep your streak going`}
+                  </Text>
+                </View>
+              </View>
+              {!dailyCheckQuery.data.done_today ? (
+                <Pressable
+                  onPress={() => dailyCheckMutation.mutate()}
+                  disabled={dailyCheckMutation.isPending}
+                  className="bg-primary rounded-lg py-2.5 items-center"
+                >
+                  <Text className="text-background font-semibold text-[13px]">Check in</Text>
+                </Pressable>
+              ) : null}
+            </Card>
+          ) : null}
 
           <View className="flex-row justify-between mb-6">
             {quickActions.map((action) => (

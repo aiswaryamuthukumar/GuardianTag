@@ -10,6 +10,7 @@ import { ListRow } from "@/components/ui/ListRow";
 import { ShieldScanner } from "@/components/ui/ShieldScanner";
 import { LoadingState, ErrorState, EmptyState } from "@/components/ui/StateViews";
 import { colors } from "@/constants/theme";
+import { toastBus } from "@/lib/demo/toast";
 import type { Asset, Incident } from "@/types/api";
 
 export default function GuardianMode() {
@@ -24,13 +25,21 @@ export default function GuardianMode() {
   const armMutation = useMutation({
     mutationFn: ({ id, is_armed }: { id: string; is_armed: boolean }) =>
       api.patch<Asset>(`/assets/${id}`, { is_armed }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["assets"] }),
+    onSuccess: (asset) => {
+      queryClient.invalidateQueries({ queryKey: ["assets"] });
+      toastBus.show(
+        asset.is_armed
+          ? { icon: "shield", title: "Guardian Protected", subtitle: asset.name, tone: "primary" }
+          : { icon: "shield-off", title: "Guardian Disarmed", subtitle: asset.name, tone: "warning" },
+      );
+    },
   });
 
   const simulateMutation = useMutation({
     mutationFn: () => api.post<Incident>("/demo/simulate-incident"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["incidents"] });
+      toastBus.show({ icon: "alert-triangle", title: "Alert Detected", subtitle: "New case opened", tone: "emergency" });
       router.push("/(app)/emergency-alert");
     },
   });

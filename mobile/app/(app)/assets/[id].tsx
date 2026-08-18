@@ -1,4 +1,5 @@
-﻿import { View, Text, Alert } from "react-native";
+﻿import { useState } from "react";
+import { View, Text } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApi } from "@/hooks/useApi";
@@ -7,13 +8,16 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { ConfirmSheet } from "@/components/ui/ConfirmSheet";
 import { LoadingState, ErrorState } from "@/components/ui/StateViews";
+import { toastBus } from "@/lib/demo/toast";
 import type { Asset } from "@/types/api";
 
 export default function AssetDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const api = useApi();
   const queryClient = useQueryClient();
+  const [confirmVisible, setConfirmVisible] = useState(false);
 
   const assetQuery = useQuery({
     queryKey: ["assets", id],
@@ -25,6 +29,11 @@ export default function AssetDetails() {
     onSuccess: (updated) => {
       queryClient.setQueryData(["assets", id], updated);
       queryClient.invalidateQueries({ queryKey: ["assets"] });
+      toastBus.show(
+        updated.is_armed
+          ? { icon: "shield", title: "Guardian Armed", subtitle: updated.name, tone: "primary" }
+          : { icon: "shield-off", title: "Guardian Disarmed", subtitle: updated.name, tone: "warning" },
+      );
     },
   });
 
@@ -35,13 +44,6 @@ export default function AssetDetails() {
       router.back();
     },
   });
-
-  const confirmDelete = () => {
-    Alert.alert("Remove asset", "This asset will no longer be tracked. Continue?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Remove", style: "destructive", onPress: () => deleteMutation.mutate() },
-    ]);
-  };
 
   if (assetQuery.isLoading) {
     return (
@@ -93,8 +95,20 @@ export default function AssetDetails() {
       ) : null}
 
       <View className="mt-2">
-        <Button label="Remove asset" variant="danger" onPress={confirmDelete} loading={deleteMutation.isPending} />
+        <Button label="Remove asset" variant="danger" onPress={() => setConfirmVisible(true)} loading={deleteMutation.isPending} />
       </View>
+
+      <ConfirmSheet
+        visible={confirmVisible}
+        title="Remove asset"
+        message="This asset will no longer be tracked. Continue?"
+        confirmLabel="Remove"
+        onCancel={() => setConfirmVisible(false)}
+        onConfirm={() => {
+          setConfirmVisible(false);
+          deleteMutation.mutate();
+        }}
+      />
     </ScreenContainer>
   );
 }

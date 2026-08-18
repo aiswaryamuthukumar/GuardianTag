@@ -17,17 +17,6 @@ export const colors = {
   text: "#F1F5F3",
 } as const;
 
-export type GuardianLevelLabel =
-  | "Rookie"
-  | "Watchman"
-  | "Guardian"
-  | "Sentinel"
-  | "Hostel Protector";
+export type GuardianLevelLabel = "Rookie Guardian" | "Alert Guardian" | "Protector" | "Guardian Pro";
 
-export const guardianLevels: GuardianLevelLabel[] = [
-  "Rookie",
-  "Watchman",
-  "Guardian",
-  "Sentinel",
-  "Hostel Protector",
-];
+export const guardianLevels: GuardianLevelLabel[] = ["Rookie Guardian", "Alert Guardian", "Protector", "Guardian Pro"];

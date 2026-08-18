@@ -6,6 +6,8 @@ import { useApi } from "@/hooks/useApi";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Button } from "@/components/ui/Button";
+import { toastBus } from "@/lib/demo/toast";
+import { takeLastUnlock } from "@/lib/demo/mockStore";
 import type { Incident, IncidentStatus } from "@/types/api";
 
 export default function CaseResolution() {
@@ -19,8 +21,25 @@ export default function CaseResolution() {
     mutationFn: () =>
       api.patch<Incident>(`/incidents/${id}/resolve`, { status, resolution_notes: notes }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["incidents"] });
-      queryClient.invalidateQueries({ queryKey: ["incidents", id] });
+      queryClient.invalidateQueries();
+      toastBus.show(
+        status === "resolved"
+          ? { icon: "check-circle", title: "Resolved ✓", subtitle: "+50 XP", tone: "safe" }
+          : { icon: "shield", title: "Marked False Alarm", tone: "warning" },
+      );
+      const unlock = takeLastUnlock();
+      if (unlock) {
+        setTimeout(
+          () =>
+            toastBus.show({
+              icon: "award",
+              title: unlock.type === "level" ? `Level Up: ${unlock.label}` : "Achievement Unlocked!",
+              subtitle: unlock.type === "achievement" ? unlock.label : undefined,
+              tone: "primary",
+            }),
+          1900,
+        );
+      }
       router.replace(`/(app)/incidents/${id}`);
     },
   });

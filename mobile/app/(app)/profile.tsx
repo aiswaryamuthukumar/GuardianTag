@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { View, Text, TextInput } from "react-native";
 import { router } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -16,11 +16,10 @@ import { LoadingState, ErrorState } from "@/components/ui/StateViews";
 import type { Asset, Device, GuardianLevel, SecurityScore, User } from "@/types/api";
 
 const levelLabels: Record<GuardianLevel, string> = {
-  rookie: "Rookie",
-  watchman: "Watchman",
-  guardian: "Guardian",
-  sentinel: "Sentinel",
-  hostel_protector: "Hostel Protector",
+  rookie_guardian: "Rookie Guardian",
+  alert_guardian: "Alert Guardian",
+  protector: "Protector",
+  guardian_pro: "Guardian Pro",
 };
 
 export default function Profile() {

@@ -6,16 +6,16 @@ import { useApi } from "@/hooks/useApi";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Card } from "@/components/ui/Card";
+import { PulseOnChange } from "@/components/ui/PulseOnChange";
 import { LoadingState, ErrorState, EmptyState } from "@/components/ui/StateViews";
 import { colors, guardianLevels, type GuardianLevelLabel } from "@/constants/theme";
 import type { GuardianLevel, SecurityScore, XPTransaction } from "@/types/api";
 
 const levelLabels: Record<GuardianLevel, GuardianLevelLabel> = {
-  rookie: "Rookie",
-  watchman: "Watchman",
-  guardian: "Guardian",
-  sentinel: "Sentinel",
-  hostel_protector: "Hostel Protector",
+  rookie_guardian: "Rookie Guardian",
+  alert_guardian: "Alert Guardian",
+  protector: "Protector",
+  guardian_pro: "Guardian Pro",
 };
 
 function LevelBar({ index, filled }: { index: number; filled: boolean }) {
@@ -65,13 +65,17 @@ export default function GuardianXP() {
 
       {scoreQuery.data ? (
         <Card className="mb-6 items-center py-6">
-          <Text className="text-[36px] font-bold text-primary-light">{scoreQuery.data.score}</Text>
+          <PulseOnChange value={scoreQuery.data.score}>
+            <Text className="text-[36px] font-bold text-primary-light">{scoreQuery.data.score}</Text>
+          </PulseOnChange>
           <Text className="text-muted dark:text-[#8A8D98] text-[12px] mt-0.5 tracking-wide">XP EARNED</Text>
           <Text className="text-foreground dark:text-white font-semibold mt-3 text-[16px]">{levelLabels[scoreQuery.data.level]}</Text>
-          <View className="flex-row items-center mt-1">
-            <Feather name="trending-up" size={13} color={colors.mutedLight} style={{ marginRight: 4 }} />
-            <Text className="text-muted dark:text-[#8A8D98] text-[13px]">{scoreQuery.data.streak_days} day streak</Text>
-          </View>
+          <PulseOnChange value={scoreQuery.data.streak_days}>
+            <View className="flex-row items-center mt-1">
+              <Feather name="trending-up" size={13} color={colors.mutedLight} style={{ marginRight: 4 }} />
+              <Text className="text-muted dark:text-[#8A8D98] text-[13px]">{scoreQuery.data.streak_days} day streak</Text>
+            </View>
+          </PulseOnChange>
 
           <View className="flex-row mt-5 w-full gap-1">
             {guardianLevels.map((level, index) => (

@@ -4,6 +4,9 @@ import { useApi } from "@/hooks/useApi";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { StatRow } from "@/components/ui/StatRow";
+import { StatTile } from "@/components/ui/StatTile";
 import { LoadingState, ErrorState, EmptyState } from "@/components/ui/StateViews";
 import { SecurityGauge } from "@/components/charts/SecurityGauge";
 import { CaseDonut } from "@/components/charts/CaseDonut";
@@ -12,13 +15,22 @@ import { DeviceHealthBars } from "@/components/charts/DeviceHealthBars";
 import { ResponseTimeBars } from "@/components/charts/ResponseTimeBars";
 import { colors } from "@/constants/theme";
 import type {
+  AlertTimelineEntry,
   AnalyticsSummary,
   AssetCoverage,
   DailyIncidentCountApi,
   Device,
   ResponseTimes,
   SecurityScore,
+  WeeklySummary,
 } from "@/types/api";
+
+const statusTone: Record<string, "emergency" | "warning" | "safe" | "muted"> = {
+  open: "emergency",
+  investigating: "warning",
+  resolved: "safe",
+  false_alarm: "muted",
+};
 
 export default function Analytics() {
   const api = useApi();
@@ -44,6 +56,14 @@ export default function Analytics() {
     queryFn: () => api.get<SecurityScore>("/gamification/security-score"),
   });
   const devicesQuery = useQuery({ queryKey: ["devices"], queryFn: () => api.get<Device[]>("/devices") });
+  const weeklyQuery = useQuery({
+    queryKey: ["weekly-summary"],
+    queryFn: () => api.get<WeeklySummary>("/gamification/weekly-summary"),
+  });
+  const timelineQuery = useQuery({
+    queryKey: ["alert-timeline"],
+    queryFn: () => api.get<AlertTimelineEntry[]>("/analytics/alert-timeline"),
+  });
 
   const loading = summaryQuery.isLoading || trendQuery.isLoading;
   const error = summaryQuery.error || trendQuery.error;
@@ -109,6 +129,42 @@ export default function Analytics() {
           />
         </Card>
       ) : null}
+
+      {weeklyQuery.data ? (
+        <Card className="mb-4">
+          <Text className="text-foreground font-semibold mb-3">This week</Text>
+          <StatRow>
+            <StatTile label="XP gained" value={weeklyQuery.data.xp_gained} accent="text-primary-light" />
+            <StatTile label="Streak" value={`${weeklyQuery.data.streak_days}d`} accent="text-foreground" />
+            <StatTile label="Alerts" value={weeklyQuery.data.alerts} accent="text-emergency-light" />
+            <StatTile label="Resolved" value={weeklyQuery.data.resolved_cases} accent="text-safe-light" />
+          </StatRow>
+        </Card>
+      ) : null}
+
+      <Card className="mb-4">
+        <Text className="text-foreground font-semibold mb-3">Alert timeline</Text>
+        {timelineQuery.data && timelineQuery.data.length === 0 ? (
+          <EmptyState title="No alerts yet" message="Triggered alerts will show up here." />
+        ) : null}
+        {timelineQuery.data?.map((entry, i) => (
+          <View
+            key={entry.id}
+            className={`flex-row items-center justify-between py-2.5 ${i === (timelineQuery.data?.length ?? 0) - 1 ? "" : "border-b border-hairline"}`}
+          >
+            <View className="flex-1 mr-2">
+              <Text className="text-foreground text-[13px] font-medium">
+                {entry.device_name} · <Text className="capitalize text-muted">{entry.severity}</Text>
+              </Text>
+              <Text className="text-muted text-[12px] mt-0.5">
+                {new Date(entry.triggered_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })} ·{" "}
+                {new Date(entry.triggered_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+              </Text>
+            </View>
+            <Badge label={entry.status.replace("_", " ")} tone={statusTone[entry.status] ?? "muted"} />
+          </View>
+        ))}
+      </Card>
     </ScreenContainer>
   );
 }

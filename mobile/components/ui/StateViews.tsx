@@ -1,4 +1,5 @@
-﻿import { View, Text, ActivityIndicator } from "react-native";
+import { useEffect, useRef } from "react";
+import { View, Text, Animated, ActivityIndicator } from "react-native";
 import { colors } from "@/constants/theme";
 import { Button } from "@/components/ui/Button";
 
@@ -42,8 +43,19 @@ export function EmptyState({
   actionLabel?: string;
   onAction?: () => void;
 }) {
+  const anim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.spring(anim, { toValue: 1, friction: 7, tension: 50, useNativeDriver: true }).start();
+  }, [anim]);
+
   return (
-    <View className="items-center justify-center py-16 px-4">
+    <Animated.View
+      style={{
+        opacity: anim,
+        transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) }],
+      }}
+      className="items-center justify-center py-16 px-4"
+    >
       <Text className="text-foreground dark:text-white font-semibold text-center mb-1">{title}</Text>
       {message ? <Text className="text-muted dark:text-[#8A8D98] text-center mb-4">{message}</Text> : null}
       {actionLabel && onAction ? (
@@ -51,6 +63,6 @@ export function EmptyState({
           <Button label={actionLabel} onPress={onAction} variant="secondary" />
         </View>
       ) : null}
-    </View>
+    </Animated.View>
   );
 }

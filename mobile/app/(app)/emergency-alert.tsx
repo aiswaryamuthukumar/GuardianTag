@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ShieldScanner } from "@/components/ui/ShieldScanner";
 import { LoadingState, ErrorState, EmptyState } from "@/components/ui/StateViews";
+import { toastBus } from "@/lib/demo/toast";
 import type { Incident } from "@/types/api";
 
 export default function EmergencyAlert() {
@@ -27,7 +28,8 @@ export default function EmergencyAlert() {
         resolution_notes: "Marked as false alarm from the app",
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["incidents"] });
+      queryClient.invalidateQueries();
+      toastBus.show({ icon: "shield", title: "Marked False Alarm", tone: "warning" });
     },
   });
 

@@ -12,9 +12,9 @@ const toneColor: Record<ScannerTone, string> = {
 };
 
 const toneBg: Record<ScannerTone, string> = {
-  primary: "rgba(124,111,224,0.10)",
-  emergency: "rgba(229,72,77,0.10)",
-  muted: "rgba(138,141,152,0.06)",
+  primary: "rgba(105,215,184,0.10)",
+  emergency: "rgba(239,98,98,0.10)",
+  muted: "rgba(154,167,161,0.06)",
 };
 
 export function ShieldScanner({

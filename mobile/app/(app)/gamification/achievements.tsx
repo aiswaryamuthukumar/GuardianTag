@@ -53,13 +53,13 @@ function AchievementCard({
         className={`items-center py-5 px-3 ${unlocked ? "" : "opacity-60"}`}
         style={
           unlocked
-            ? { borderColor: "rgba(124,111,224,0.4)", shadowColor: colors.primary, shadowOpacity: 0.25, shadowRadius: 10, elevation: 3 }
+            ? { borderColor: "rgba(105,215,184,0.4)", shadowColor: colors.primary, shadowOpacity: 0.25, shadowRadius: 10, elevation: 3 }
             : undefined
         }
       >
         <View
           className="w-14 h-14 rounded-full items-center justify-center mb-3"
-          style={{ backgroundColor: unlocked ? "rgba(124,111,224,0.16)" : colors.surfaceAlt }}
+          style={{ backgroundColor: unlocked ? "rgba(105,215,184,0.16)" : colors.surfaceAlt }}
         >
           <Feather name={unlocked ? "award" : "lock"} size={24} color={unlocked ? colors.primaryLight : colors.muted} />
         </View>
@@ -74,7 +74,7 @@ function AchievementCard({
         </Text>
         <View
           className="px-2.5 py-1 rounded-full"
-          style={{ backgroundColor: unlocked ? "rgba(124,111,224,0.16)" : colors.surfaceAlt }}
+          style={{ backgroundColor: unlocked ? "rgba(105,215,184,0.16)" : colors.surfaceAlt }}
         >
           <Text className={`text-[12px] font-semibold ${unlocked ? "text-primary-light" : "text-muted"}`}>
             +{achievement.xp_reward} XP

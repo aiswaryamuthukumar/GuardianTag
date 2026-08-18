@@ -3,10 +3,10 @@ import { Feather } from "@expo/vector-icons";
 import { colors } from "@/constants/theme";
 
 const toneBg: Record<string, string> = {
-  primary: "rgba(124,111,224,0.14)",
-  safe: "rgba(62,189,115,0.14)",
-  warning: "rgba(216,154,62,0.14)",
-  emergency: "rgba(229,72,77,0.14)",
+  primary: "rgba(105,215,184,0.14)",
+  safe: "rgba(105,215,184,0.14)",
+  warning: "rgba(242,184,75,0.14)",
+  emergency: "rgba(239,98,98,0.14)",
   muted: colors.surfaceAlt,
 };
 

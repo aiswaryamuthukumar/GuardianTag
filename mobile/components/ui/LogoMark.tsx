@@ -9,9 +9,9 @@ export function LogoMark({ size = 32 }: { size?: number }) {
         width: size,
         height: size,
         borderRadius: size * 0.28,
-        backgroundColor: "rgba(59,130,246,0.14)",
+        backgroundColor: "rgba(105,215,184,0.14)",
         borderWidth: 1,
-        borderColor: "rgba(59,130,246,0.35)",
+        borderColor: "rgba(105,215,184,0.35)",
         alignItems: "center",
         justifyContent: "center",
       }}

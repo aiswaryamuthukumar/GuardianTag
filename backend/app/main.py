@@ -1,6 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
+from app.core.logging import setup_logging
 
+setup_logging()
 from app.core.config import get_settings
 from app.routers import (
     analytics,
@@ -19,7 +25,19 @@ from app.routers import (
 
 settings = get_settings()
 
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(title="HostDost API", version="0.1.0")
+app.state.limiter = limiter
+
+# Add rate limit exception handler
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Rate limit exceeded. Try again later."},
+    )
 
 app.add_middleware(
     CORSMiddleware,
@@ -44,6 +62,4 @@ for router in (
 ):
     app.include_router(router, prefix=settings.api_v1_prefix)
 
-# Mounted at the literal /ws/devices/{device_id} path (no /api/v1 prefix), matching
-# the architecture spec.
 app.include_router(ws.router)

@@ -1,7 +1,7 @@
-import { View, Text } from "react-native";
+import { View, Text, Button } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
+import { useClerk, useUser } from "@clerk/clerk-expo";
 import { useApi } from "@/hooks/useApi";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { StatTile } from "@/components/ui/StatTile";
@@ -12,19 +12,34 @@ import type { AnalyticsSummary, Device, SecurityScore } from "@/types/api";
 
 export default function Home() {
   const api = useApi();
+  const { signOut } = useClerk();
   const { user } = useUser();
 
   const devicesQuery = useQuery({
     queryKey: ["devices"],
     queryFn: () => api.get<Device[]>("/devices"),
+    retry: 3, // Retry up to 3 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
+
   const summaryQuery = useQuery({
     queryKey: ["analytics-summary"],
     queryFn: () => api.get<AnalyticsSummary>("/analytics/summary"),
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
+
   const scoreQuery = useQuery({
     queryKey: ["security-score"],
     queryFn: () => api.get<SecurityScore>("/gamification/security-score"),
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const loading = devicesQuery.isLoading || summaryQuery.isLoading || scoreQuery.isLoading;
@@ -32,13 +47,26 @@ export default function Home() {
 
   return (
     <ScreenContainer onRefresh={() => devicesQuery.refetch()} refreshing={devicesQuery.isRefetching}>
+      <Button 
+        title="Logout (Dev)" 
+        onPress={() => signOut()} 
+      />
       <Text className="text-muted mt-2">Welcome back</Text>
       <Text className="text-2xl font-bold text-white mb-4">
         {user?.firstName ?? "Guardian"}
       </Text>
 
       {loading ? <LoadingState /> : null}
-      {error ? <ErrorState message={(error as Error).message} onRetry={() => devicesQuery.refetch()} /> : null}
+      {error ? (<
+        ErrorState 
+        message={(error as Error).message} 
+        onRetry={() => {
+          devicesQuery.refetch();
+          summaryQuery.refetch();
+          scoreQuery.refetch()
+        }} 
+        /> 
+      ): null}
 
       {!loading && !error ? (
         <>

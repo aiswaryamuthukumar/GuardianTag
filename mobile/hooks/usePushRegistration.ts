@@ -1,65 +1,48 @@
 import { useEffect, useRef } from "react";
 import { Platform } from "react-native";
-import * as Device from "expo-device";
-import * as Notifications from "expo-notifications";
-import { router } from "expo-router";
-import { useAuth } from "@clerk/clerk-expo";
-import { useApi } from "@/hooks/useApi";
+import { useUser } from "@clerk/clerk-expo";
+import { apiClient } from "@/lib/api/client";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
-
-/**
- * Requests notification permissions, registers this device's Expo push token
- * with the backend, and routes to the Emergency Alert screen when the user
- * taps an incident push (covers the app being backgrounded/killed, which the
- * WebSocket-driven in-app alert in DeviceSocketsProvider can't reach).
- */
 export function usePushRegistration() {
-  const { isSignedIn } = useAuth();
-  const api = useApi();
+  const { user } = useUser();
   const registeredTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!isSignedIn || !Device.isDevice) return;
+    // Skip on web - push notifications not supported
+    if (Platform.OS === "web") {
+      return;
+    }
 
-    (async () => {
-      const existing = await Notifications.getPermissionsAsync();
-      let status = existing.status;
-      if (status !== "granted") {
-        const requested = await Notifications.requestPermissionsAsync();
-        status = requested.status;
-      }
-      if (status !== "granted") return;
+    // Skip if no user logged in
+    if (!user?.id) {
+      return;
+    }
 
-      if (Platform.OS === "android") {
-        await Notifications.setNotificationChannelAsync("default", {
-          name: "default",
-          importance: Notifications.AndroidImportance.HIGH,
+    const register = async () => {
+      try {
+        // Import AFTER platform check
+        const { getExpoPushTokenAsync } = await import("expo-notifications");
+        const { data: expoPushToken } = await getExpoPushTokenAsync();
+
+        // Skip if already registered this token
+        if (registeredTokenRef.current === expoPushToken) {
+          return;
+        }
+
+        registeredTokenRef.current = expoPushToken;
+
+        // Send to backend only once
+        await apiClient.post("/notifications/register-token", {
+          push_token: expoPushToken,
         });
+
+        console.log("Push token registered successfully");
+      } catch (error) {
+        console.error("Push registration failed:", error);
+        // Don't crash - push notifications are optional
       }
+    };
 
-      const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync();
-      if (registeredTokenRef.current === expoPushToken) return;
-      registeredTokenRef.current = expoPushToken;
-
-      await api.patch("/auth/me", { expo_push_token: expoPushToken });
-    })();
-  }, [isSignedIn, api]);
-
-  useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      const data = response.notification.request.content.data as { incident_id?: string } | undefined;
-      if (data?.incident_id) {
-        router.push("/(app)/emergency-alert");
-      }
-    });
-    return () => subscription.remove();
-  }, []);
+    register();
+  }, [user?.id]);
 }

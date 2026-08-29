@@ -6,7 +6,7 @@ export default function Onboarding() {
     <View className="flex-1 bg-background px-6 justify-between py-16">
       <View />
       <View className="items-center">
-        <Text className="text-4xl font-extrabold text-primary mb-3">HostDost</Text>
+        <Text className="text-4xl font-extrabold text-primary mb-3">GuardianTag</Text>
         <Text className="text-white text-lg text-center mb-2">
           Your bags, guarded around the clock.
         </Text>

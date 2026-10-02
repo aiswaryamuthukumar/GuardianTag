@@ -1,4 +1,4 @@
-# HostDost — IoT Hostel Security System
+# GuardianTag — IoT Hostel Security System
 
 Real-time hostel bag/asset security system: ESP32 sensor node detects unauthorized
 movement, sounds a local buzzer instantly (no network dependency), and reports
@@ -71,7 +71,7 @@ npx expo start
 
 ### ESP32
 
-See `esp32/hostdost_firmware/README.md` (added in Phase 6).
+See `esp32/GuardianTag_firmware/README.md` (added in Phase 6).
 
 ## Testing
 

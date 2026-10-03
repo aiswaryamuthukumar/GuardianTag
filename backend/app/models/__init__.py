@@ -10,11 +10,15 @@ from app.models.gamification import (
     XPTransaction,
 )
 from app.models.incident import Evidence, Incident, IncidentTimelineEvent
+from app.models.notice import Notice
 from app.models.notification import Notification
+from app.models.schedule import ArmSchedule
 from app.models.sensor_event import SensorEvent
 from app.models.user import User
 
 __all__ = [
+    "ArmSchedule",
+    "Notice",
     "Asset",
     "Device",
     "DeviceHealth",

@@ -24,8 +24,10 @@ class Asset(UUIDPKMixin, TimestampMixin, Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     photo_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     is_armed: Mapped[bool] = mapped_column(Boolean, default=False)
+    location: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     owner: Mapped["User"] = relationship(back_populates="assets")
     device: Mapped["Device | None"] = relationship(back_populates="assets")
     sensor_events: Mapped[list["SensorEvent"]] = relationship(back_populates="asset")
     incidents: Mapped[list["Incident"]] = relationship(back_populates="asset")
+    schedules: Mapped[list["ArmSchedule"]] = relationship(back_populates="asset", cascade="all, delete-orphan")

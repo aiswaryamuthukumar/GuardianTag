@@ -4,7 +4,7 @@ from uuid import UUID
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models.enums import GuardianLevel
+from app.models.enums import GuardianLevel, NotificationType
 from app.models.gamification import (
     Achievement,
     Challenge,
@@ -98,7 +98,7 @@ def award_xp(
     return transaction
 
 
-def _metric_value(db: Session, user: User, security_score: SecurityScore, metric: str) -> int:
+def metric_value(db: Session, user: User, security_score: SecurityScore, metric: str) -> int:
     if metric == "streak_days":
         return security_score.streak_days
 
@@ -123,6 +123,13 @@ def _metric_value(db: Session, user: User, security_score: SecurityScore, metric
     return 0
 
 
+def _announce(db: Session, user: User, title: str, body: str, notif_type: NotificationType) -> None:
+    # Imported lazily: notify -> realtime is fine, but keep gamification importable on its own.
+    from app.services.notify import notify_user
+
+    notify_user(db, user, notif_type, title=title, body=body)
+
+
 def check_achievements(db: Session, user: User) -> list[Achievement]:
     """Unlocks any not-yet-unlocked achievement whose criteria the user now meets."""
     security_score = get_or_create_security_score(db, user)
@@ -139,7 +146,7 @@ def check_achievements(db: Session, user: User) -> list[Achievement]:
         metric, target = criteria.get("metric"), criteria.get("target")
         if metric is None or target is None:
             continue
-        if _metric_value(db, user, security_score, metric) >= target:
+        if metric_value(db, user, security_score, metric) >= target:
             db.add(
                 UserAchievement(
                     user_id=user.id,
@@ -149,6 +156,7 @@ def check_achievements(db: Session, user: User) -> list[Achievement]:
             )
             db.commit()
             newly_unlocked.append(achievement)
+            _announce(db, user, f"Achievement unlocked: {achievement.name}", achievement.description, NotificationType.ACHIEVEMENT)
             if achievement.xp_reward:
                 award_xp(
                     db,
@@ -178,7 +186,7 @@ def check_challenges(db: Session, user: User) -> list[Challenge]:
         metric, target = criteria.get("metric"), criteria.get("target")
         if metric is None or target is None:
             continue
-        if _metric_value(db, user, security_score, metric) >= target:
+        if metric_value(db, user, security_score, metric) >= target:
             db.add(
                 ChallengeCompletion(
                     user_id=user.id,
@@ -188,6 +196,7 @@ def check_challenges(db: Session, user: User) -> list[Challenge]:
             )
             db.commit()
             newly_completed.append(challenge)
+            _announce(db, user, f"Challenge complete: {challenge.title}", f"+{challenge.xp_reward} XP", NotificationType.CHALLENGE)
             if challenge.xp_reward:
                 award_xp(
                     db,

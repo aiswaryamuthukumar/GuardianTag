@@ -14,6 +14,7 @@ class AssetOut(TimestampedORMBase):
     description: str | None = None
     photo_url: str | None = None
     is_armed: bool
+    location: str | None = None
 
 
 class AssetCreateIn(BaseModel):
@@ -22,6 +23,7 @@ class AssetCreateIn(BaseModel):
     description: str | None = None
     photo_url: str | None = None
     device_id: UUID | None = None
+    location: str | None = None
 
 
 class AssetUpdateIn(BaseModel):
@@ -31,3 +33,4 @@ class AssetUpdateIn(BaseModel):
     photo_url: str | None = None
     device_id: UUID | None = None
     is_armed: bool | None = None
+    location: str | None = None

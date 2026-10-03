@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 from app.models.enums import EvidenceType, IncidentSeverity, IncidentStatus, TimelineActor
 from app.schemas.common import ORMBase, TimestampedORMBase
@@ -53,3 +53,14 @@ class IncidentDetailOut(IncidentOut):
 class IncidentResolveIn(BaseModel):
     status: IncidentStatus
     resolution_notes: str | None = None
+
+    @field_validator("status")
+    @classmethod
+    def _closing_status(cls, v: IncidentStatus) -> IncidentStatus:
+        if v not in (IncidentStatus.RESOLVED, IncidentStatus.FALSE_ALARM):
+            raise ValueError("status must be resolved or false_alarm")
+        return v
+
+
+class IncidentNoteIn(BaseModel):
+    note: str = Field(min_length=1, max_length=2000)

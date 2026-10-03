@@ -1,0 +1,20 @@
+export declare const palette: {
+  background: string;
+  surface: string;
+  surfaceAlt: string;
+  border: string;
+  primary: string;
+  primaryLight: string;
+  primaryDark: string;
+  safe: string;
+  safeLight: string;
+  safeDark: string;
+  warning: string;
+  warningLight: string;
+  warningDark: string;
+  emergency: string;
+  emergencyLight: string;
+  emergencyDark: string;
+  muted: string;
+  text: string;
+};

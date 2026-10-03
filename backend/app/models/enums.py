@@ -63,3 +63,8 @@ class NotificationType(str, enum.Enum):
     CHALLENGE = "challenge"
     DEVICE_HEALTH = "device_health"
     SYSTEM = "system"
+
+
+class UserRole(str, enum.Enum):
+    STUDENT = "student"
+    WARDEN = "warden"

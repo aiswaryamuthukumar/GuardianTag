@@ -12,6 +12,8 @@ backend/.pytest_cache/
 backend/.env
 backend/.mypy_cache/
 backend/.ruff_cache/
+backend/uploads/
+backend/tests/.uploads/
 
 # --- Mobile (Expo / RN) ---
 mobile/node_modules/

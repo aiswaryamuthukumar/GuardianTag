@@ -1,17 +1,20 @@
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.asset import Asset
 from app.models.device import Device
 from app.models.enums import IncidentStatus
 from app.models.incident import Incident
+from app.models.sensor_event import SensorEvent
 from app.models.user import User
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
@@ -145,3 +148,64 @@ def asset_coverage(
     )
     coverage = (armed / total * 100) if total else 0.0
     return AssetCoverage(total_assets=total, armed_assets=armed, coverage_percent=round(coverage, 1))
+
+
+class HeatmapOut(BaseModel):
+    """cells[weekday][hour] = number of incidents; weekday 0 = Monday, local time."""
+
+    days: int
+    cells: list[list[int]]
+    peak_weekday: int | None
+    peak_hour: int | None
+
+
+class EventMixItem(BaseModel):
+    event_type: str
+    count: int
+
+
+@router.get("/heatmap", response_model=HeatmapOut)
+def heatmap(
+    days: int = Query(default=30, ge=1, le=365),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> HeatmapOut:
+    """When do alerts happen? Incidents bucketed by local weekday x hour."""
+    tz = ZoneInfo(get_settings().app_timezone)
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+    rows = (
+        db.query(Incident.triggered_at)
+        .filter(Incident.user_id == current_user.id, Incident.triggered_at >= since)
+        .all()
+    )
+    cells = [[0] * 24 for _ in range(7)]
+    for (triggered_at,) in rows:
+        local = triggered_at.astimezone(tz)
+        cells[local.weekday()][local.hour] += 1
+
+    peak = max(((d, h) for d in range(7) for h in range(24)), key=lambda dh: cells[dh[0]][dh[1]])
+    has_data = cells[peak[0]][peak[1]] > 0
+    return HeatmapOut(
+        days=days,
+        cells=cells,
+        peak_weekday=peak[0] if has_data else None,
+        peak_hour=peak[1] if has_data else None,
+    )
+
+
+@router.get("/event-mix", response_model=list[EventMixItem])
+def event_mix(
+    days: int = Query(default=7, ge=1, le=90),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[EventMixItem]:
+    """Raw sensor activity by type - shows how often dual verification filtered out single-sensor noise."""
+    since = datetime.now(timezone.utc) - timedelta(days=days)
+    rows = (
+        db.query(SensorEvent.event_type, func.count(SensorEvent.id))
+        .join(Device, SensorEvent.device_id == Device.id)
+        .filter(Device.owner_id == current_user.id, SensorEvent.received_at >= since)
+        .group_by(SensorEvent.event_type)
+        .all()
+    )
+    return [EventMixItem(event_type=event_type.value, count=count) for event_type, count in rows]

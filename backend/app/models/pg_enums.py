@@ -10,6 +10,7 @@ from app.models.enums import (
     NotificationType,
     SensorEventType,
     TimelineActor,
+    UserRole,
 )
 
 # Each PostgreSQL enum TYPE must be declared exactly once and reused across every
@@ -24,3 +25,4 @@ incident_severity_enum = SAEnum(IncidentSeverity, name="incident_severity")
 timeline_actor_enum = SAEnum(TimelineActor, name="timeline_actor")
 evidence_type_enum = SAEnum(EvidenceType, name="evidence_type")
 notification_type_enum = SAEnum(NotificationType, name="notification_type")
+user_role_enum = SAEnum(UserRole, name="user_role")

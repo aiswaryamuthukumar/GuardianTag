@@ -1,6 +1,4 @@
-jest.mock("@/lib/demo/config", () => ({ DEMO_MODE: false }));
-
-import { apiClient, ApiError } from "@/lib/api/client";
+import { apiClient, ApiError } from "@/src/lib/api/client";
 
 function mockFetchOnce(response: Partial<Response> & { json?: () => Promise<unknown>; text?: () => Promise<string> }) {
   global.fetch = jest.fn().mockResolvedValue({

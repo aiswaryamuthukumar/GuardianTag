@@ -1,4 +1,4 @@
-import { formatDuration } from "@/lib/format";
+import { formatDuration } from "@/src/lib/format";
 
 describe("formatDuration", () => {
   it("returns an em dash for null", () => {

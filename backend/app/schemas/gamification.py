@@ -1,6 +1,8 @@
 from datetime import datetime
 from uuid import UUID
 
+from pydantic import BaseModel
+
 from app.models.enums import GuardianLevel
 from app.schemas.common import ORMBase
 
@@ -45,3 +47,27 @@ class SecurityScoreOut(ORMBase):
     level: GuardianLevel
     streak_days: int
     last_calculated_at: datetime
+
+
+class ProgressItemOut(BaseModel):
+    """One achievement or challenge with the user's live progress towards it."""
+
+    kind: str  # "achievement" | "challenge"
+    key: str
+    title: str
+    description: str
+    icon: str | None = None
+    xp_reward: int
+    progress: int
+    target: int
+    completed: bool
+    completed_at: datetime | None = None
+
+
+class LevelInfoOut(BaseModel):
+    score: int
+    level: GuardianLevel
+    streak_days: int
+    level_floor: int
+    next_level: GuardianLevel | None
+    next_level_at: int | None

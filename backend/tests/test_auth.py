@@ -1,56 +1,106 @@
-import time
+import uuid
+
+from sqlalchemy import create_engine, text
+
+STUDENT = {"email": "Asha@Hostel.dev", "password": "correct-horse-battery", "full_name": "Asha K", "role": "student"}
 
 
-def test_sync_creates_user(client, make_token):
-    token = make_token("user_sync_1")
-    response = client.post(
-        "/api/v1/auth/sync",
-        headers={"Authorization": f"Bearer {token}"},
-        json={"email": "sync@hostdost.dev", "full_name": "Sync User", "room_number": "A1"},
-    )
-    assert response.status_code == 200
+def test_register_student_returns_token_and_profile(client):
+    response = client.post("/api/v1/auth/register", json={**STUDENT, "hostel_block": "a", "room_number": "101"})
+    assert response.status_code == 201
     body = response.json()
-    assert body["clerk_user_id"] == "user_sync_1"
-    assert body["email"] == "sync@hostdost.dev"
-    assert body["level"] == "rookie"
+    assert body["token_type"] == "bearer" and body["access_token"]
+    assert body["user"]["email"] == "asha@hostel.dev"  # normalised
+    assert body["user"]["role"] == "student"
+    assert body["user"]["hostel_block"] == "A"
+    assert "password_hash" not in body["user"]
+
+    me = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {body['access_token']}"})
+    assert me.status_code == 200 and me.json()["full_name"] == "Asha K"
 
 
-def test_sync_is_idempotent_and_never_overwrites(client, make_token):
-    token = make_token("user_sync_2")
-    headers = {"Authorization": f"Bearer {token}"}
+def test_password_is_stored_hashed(client):
+    import os
 
-    first = client.post(
-        "/api/v1/auth/sync", headers=headers, json={"email": "real@hostdost.dev", "full_name": "Real Name"}
+    client.post("/api/v1/auth/register", json=STUDENT)
+    engine = create_engine(os.environ["DATABASE_URL"])
+    with engine.connect() as conn:
+        stored = conn.execute(text("SELECT password_hash FROM users WHERE email = 'asha@hostel.dev'")).scalar()
+    assert stored.startswith("$2b$") and STUDENT["password"] not in stored
+
+
+def test_duplicate_email_rejected(client):
+    assert client.post("/api/v1/auth/register", json=STUDENT).status_code == 201
+    assert client.post("/api/v1/auth/register", json={**STUDENT, "email": "asha@hostel.dev"}).status_code == 409
+
+
+def test_register_validation(client):
+    assert client.post("/api/v1/auth/register", json={**STUDENT, "password": "short"}).status_code == 422
+    assert client.post("/api/v1/auth/register", json={**STUDENT, "email": "not-an-email"}).status_code == 422
+
+
+def test_login_with_correct_and_wrong_password(client):
+    client.post("/api/v1/auth/register", json=STUDENT)
+    ok = client.post("/api/v1/auth/login", json={"email": "ASHA@hostel.dev", "password": STUDENT["password"], "role": "student"})
+    assert ok.status_code == 200 and ok.json()["user"]["email"] == "asha@hostel.dev"
+
+    wrong = client.post("/api/v1/auth/login", json={"email": STUDENT["email"], "password": "nope-nope", "role": "student"})
+    unknown = client.post("/api/v1/auth/login", json={"email": "ghost@hostel.dev", "password": "whatever1", "role": "student"})
+    assert wrong.status_code == unknown.status_code == 401
+    assert wrong.json()["detail"] == unknown.json()["detail"]  # no email probing
+
+
+def test_login_is_role_based(client):
+    client.post("/api/v1/auth/register", json=STUDENT)
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "warden@hostel.dev", "password": "warden-pass-1", "full_name": "Warden W", "role": "warden", "invite_code": "test-warden-code"},
     )
-    assert first.status_code == 200
 
-    second = client.post(
-        "/api/v1/auth/sync",
+    student_on_staff_tab = client.post("/api/v1/auth/login", json={**STUDENT, "role": "warden"})
+    assert student_on_staff_tab.status_code == 403
+    assert "Student tab" in student_on_staff_tab.json()["detail"]
+
+    staff = client.post("/api/v1/auth/login", json={"email": "warden@hostel.dev", "password": "warden-pass-1", "role": "warden"})
+    assert staff.status_code == 200 and staff.json()["user"]["role"] == "warden"
+    staff_on_student_tab = client.post("/api/v1/auth/login", json={"email": "warden@hostel.dev", "password": "warden-pass-1", "role": "student"})
+    assert staff_on_student_tab.status_code == 403
+
+
+def test_change_password(client, auth_user):
+    headers, user = auth_user()
+    bad = client.post("/api/v1/auth/change-password", headers=headers, json={"current_password": "wrong", "new_password": "brand-new-pass"})
+    assert bad.status_code == 400
+    ok = client.post(
+        "/api/v1/auth/change-password",
         headers=headers,
-        json={"email": "ignored@example.com", "full_name": "Should Not Overwrite"},
+        json={"current_password": "correct-horse-battery", "new_password": "brand-new-pass"},
     )
-    assert second.status_code == 200
-    assert second.json()["full_name"] == "Real Name"
-    assert second.json()["email"] == "real@hostdost.dev"
-    assert second.json()["id"] == first.json()["id"]
+    assert ok.status_code == 204
+    login = client.post("/api/v1/auth/login", json={"email": user["email"], "password": "brand-new-pass", "role": "student"})
+    assert login.status_code == 200
 
 
 def test_me_requires_auth(client):
-    response = client.get("/api/v1/auth/me")
-    assert response.status_code == 401
+    assert client.get("/api/v1/auth/me").status_code == 401
 
 
-def test_me_rejects_tampered_token(client, make_token):
-    token = make_token("user_tamper")
+def test_me_rejects_tampered_token(client, auth_user):
+    headers, _ = auth_user()
+    token = headers["Authorization"].split(" ", 1)[1]
     tampered = token[:-2] + ("aa" if not token.endswith("aa") else "bb")
-    response = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {tampered}"})
-    assert response.status_code == 401
+    assert client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {tampered}"}).status_code == 401
 
 
-def test_me_rejects_expired_token(client, make_token):
-    token = make_token("user_expired", expired=True)
-    response = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
-    assert response.status_code == 401
+def test_me_rejects_expired_token(client, auth_user, make_token):
+    _, user = auth_user()
+    token = make_token(user["id"], expired=True)
+    assert client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"}).status_code == 401
+
+
+def test_token_for_deleted_user_rejected(client, make_token):
+    token = make_token(str(uuid.uuid4()))
+    assert client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"}).status_code == 401
 
 
 def test_update_me(client, auth_user):
@@ -59,63 +109,6 @@ def test_update_me(client, auth_user):
     assert response.status_code == 200
     assert response.json()["room_number"] == "B2"
     assert response.json()["full_name"] == user["full_name"]  # untouched fields survive
-
-
-def test_clerk_webhook_creates_user(client, make_token):
-    from svix.webhooks import Webhook
-    from datetime import datetime, timezone
-    import json
-
-    wh = Webhook("whsec_dGVzdC13ZWJob29rLXNlY3JldC1rZXk=")
-    payload = json.dumps(
-        {
-            "type": "user.created",
-            "data": {
-                "id": "user_webhook_1",
-                "email_addresses": [{"id": "idn_1", "email_address": "webhook@hostdost.dev"}],
-                "primary_email_address_id": "idn_1",
-                "first_name": "Webhook",
-                "last_name": "User",
-            },
-        }
-    )
-    msg_id = "msg_1"
-    timestamp = datetime.now(timezone.utc)
-    signature = wh.sign(msg_id=msg_id, timestamp=timestamp, data=payload)
-
-    response = client.post(
-        "/api/v1/webhooks/clerk",
-        content=payload,
-        headers={
-            "svix-id": msg_id,
-            "svix-timestamp": str(int(timestamp.timestamp())),
-            "svix-signature": signature,
-            "Content-Type": "application/json",
-        },
-    )
-    assert response.status_code == 204
-
-    # The webhook should have created the profile already, so /auth/me works
-    # for this clerk id without ever calling /auth/sync.
-    token = make_token("user_webhook_1")
-    me = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
-    assert me.status_code == 200
-    assert me.json()["email"] == "webhook@hostdost.dev"
-    assert me.json()["full_name"] == "Webhook User"
-
-
-def test_clerk_webhook_rejects_bad_signature(client):
-    response = client.post(
-        "/api/v1/webhooks/clerk",
-        content="{}",
-        headers={
-            "svix-id": "msg_bad",
-            "svix-timestamp": str(int(time.time())),
-            "svix-signature": "v1,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-            "Content-Type": "application/json",
-        },
-    )
-    assert response.status_code == 400
 
 
 def test_telegram_link_flow(client, auth_user):

@@ -1,0 +1,18 @@
+# Local PostgreSQL for GuardianTag. `docker compose up -d`, then in backend/: `alembic upgrade head`.
+# Matches the DATABASE_URL in backend/.env.example. Data survives restarts in the named volume.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: guardiantag-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: guardiantag
+      POSTGRES_PASSWORD: guardiantag
+      POSTGRES_DB: guardiantag
+    ports:
+      - "5433:5432"
+    volumes:
+      - guardiantag-data:/var/lib/postgresql/data
+
+volumes:
+  guardiantag-data:

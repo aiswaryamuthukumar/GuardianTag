@@ -3,6 +3,8 @@ export declare const palette: {
   surface: string;
   surfaceAlt: string;
   border: string;
+  hairline: string;
+  text: string;
   primary: string;
   primaryLight: string;
   primaryDark: string;
@@ -16,5 +18,5 @@ export declare const palette: {
   emergencyLight: string;
   emergencyDark: string;
   muted: string;
-  text: string;
+  mutedLight: string;
 };

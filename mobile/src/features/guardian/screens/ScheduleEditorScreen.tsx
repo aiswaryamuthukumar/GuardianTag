@@ -69,7 +69,7 @@ export default function ScheduleEditorScreen({ id, assetId }: { id?: string; ass
                 onPress={() => { setStart(p.start); setEnd(p.end); setMask(p.mask); }}
                 className="bg-surface-alt border border-border rounded-xl px-3 py-2"
               >
-                <Text className="text-white text-sm">{p.label}</Text>
+                <Text className="text-foreground text-sm">{p.label}</Text>
                 <Text className="text-muted text-xs">{p.start}–{p.end}</Text>
               </Pressable>
             ))}
@@ -102,7 +102,7 @@ export default function ScheduleEditorScreen({ id, assetId }: { id?: string; ass
               accessibilityState={{ checked: on }}
               className={`w-11 h-11 rounded-full items-center justify-center border ${on ? "bg-primary border-primary" : "bg-surface border-border"}`}
             >
-              <Text className={`text-xs font-semibold ${on ? "text-white" : "text-muted"}`}>{day.slice(0, 2)}</Text>
+              <Text className={`text-xs font-semibold ${on ? "text-foreground" : "text-muted"}`}>{day.slice(0, 2)}</Text>
             </Pressable>
           );
         })}

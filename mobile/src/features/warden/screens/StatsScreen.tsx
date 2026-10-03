@@ -5,6 +5,7 @@ import { Card } from "@/src/components/ui/Card";
 import { KeyValue, SectionTitle } from "@/src/components/ui/Display";
 import { ScreenContainer } from "@/src/components/ui/ScreenContainer";
 import { ScreenHeader } from "@/src/components/ui/ScreenHeader";
+import { StatRow } from "@/src/components/ui/StatRow";
 import { StatTile } from "@/src/components/ui/StatTile";
 import { ErrorState, LoadingState } from "@/src/components/ui/StateViews";
 import { useWardenStats } from "@/src/features/warden/api";
@@ -24,11 +25,11 @@ export default function StatsScreen() {
         <ErrorState message={stats.error?.message} onRetry={stats.refetch} />
       ) : (
         <>
-          <View className="flex-row gap-3">
+          <StatRow>
             <StatTile label="Students" value={s.students} />
-            <StatTile label="Open now" value={s.open_incidents} accent={s.open_incidents ? "text-emergency" : "text-white"} />
+            <StatTile label="Open now" value={s.open_incidents} accent={s.open_incidents ? "text-emergency" : "text-foreground"} />
             <StatTile label="Incidents" value={s.incidents_30d} accent="text-warning" />
-          </View>
+          </StatRow>
 
           <SectionTitle title="Device fleet" />
           <Card className="flex-row items-center">

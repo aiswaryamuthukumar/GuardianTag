@@ -1,6 +1,8 @@
-import { Alert, Image, Text, View } from "react-native";
+import { useState } from "react";
+import { Image, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Button } from "@/src/components/ui/Button";
+import { ConfirmSheet } from "@/src/components/ui/ConfirmSheet";
 import { Card } from "@/src/components/ui/Card";
 import { KeyValue, SectionTitle } from "@/src/components/ui/Display";
 import { ToggleRow } from "@/src/components/ui/Form";
@@ -14,7 +16,7 @@ import { useDevices } from "@/src/features/devices/api";
 import { ScheduleRow } from "@/src/features/guardian/ScheduleRow";
 import { useSchedules } from "@/src/features/guardian/api";
 import { fileUrl } from "@/src/lib/api/client";
-import { categoryIcons, categoryLabels } from "@/src/lib/format";
+import { categoryLabels } from "@/src/lib/format";
 
 export default function AssetDetailScreen({ id }: { id: string }) {
   const asset = useAsset(id);
@@ -22,9 +24,17 @@ export default function AssetDetailScreen({ id }: { id: string }) {
   const schedules = useSchedules();
   const events = useEvents({ asset_id: id, limit: 20 });
   const setArmed = useSetArmed();
+  const [confirming, setConfirming] = useState(false);
   const remove = useDeleteAsset(id);
 
-  if (asset.isLoading) return <ScreenContainer><LoadingState /></ScreenContainer>;
+  if (asset.isLoading) {
+    return (
+      <ScreenContainer>
+        <ScreenHeader title="Belonging" showBack />
+        <LoadingState />
+      </ScreenContainer>
+    );
+  }
   if (!asset.data) {
     return (
       <ScreenContainer>
@@ -38,19 +48,15 @@ export default function AssetDetailScreen({ id }: { id: string }) {
   const device = devices.data?.find((d) => d.id === a.device_id);
   const mySchedules = (schedules.data ?? []).filter((s) => s.asset_id === id);
 
-  const confirmDelete = () =>
-    Alert.alert("Delete belonging?", `${a.name} and its schedules will be removed.`, [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => remove.mutate(undefined, { onSuccess: () => router.back() }) },
-    ]);
+  const confirmDelete = () => setConfirming(true);
 
   return (
     <ScreenContainer onRefresh={() => { asset.refetch(); events.refetch(); }} refreshing={asset.isRefetching}>
       <ScreenHeader
         title={a.name}
-        subtitle={`${categoryIcons[a.category]} ${categoryLabels[a.category]}`}
+        subtitle={categoryLabels[a.category]}
         showBack
-        right={<Button label="Edit" size="sm" variant="secondary" onPress={() => router.push({ pathname: "/assets/new", params: { id } })} />}
+        right={<Button label="Edit" size="sm" variant="secondary" onPress={() => router.push({ pathname: "/belongings/new", params: { id } })} />}
       />
 
       {a.photo_url ? (
@@ -102,6 +108,17 @@ export default function AssetDetailScreen({ id }: { id: string }) {
       <View className="mt-6">
         <Button label="Delete belonging" variant="danger" loading={remove.isPending} onPress={confirmDelete} />
       </View>
+      <ConfirmSheet
+        visible={confirming}
+        title="Delete belonging?"
+        message={`${a.name} and its schedules will be removed.`}
+        confirmLabel="Delete"
+        onCancel={() => setConfirming(false)}
+        onConfirm={() => {
+          setConfirming(false);
+          remove.mutate(undefined, { onSuccess: () => router.back() });
+        }}
+      />
     </ScreenContainer>
   );
 }

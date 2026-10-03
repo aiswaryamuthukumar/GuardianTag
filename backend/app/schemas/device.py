@@ -14,6 +14,8 @@ class DeviceOut(TimestampedORMBase):
     status: DeviceStatus
     firmware_version: str | None = None
     last_seen_at: datetime | None = None
+    battery_percent: int | None = None
+    signal_strength: int | None = None  # 0-100, from the last heartbeat's Wi-Fi RSSI
 
 
 class DevicePairIn(BaseModel):

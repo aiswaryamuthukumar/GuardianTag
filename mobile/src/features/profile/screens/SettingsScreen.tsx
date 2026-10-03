@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
-import { Alert, Linking, Text, View } from "react-native";
+import { Linking, Text, View } from "react-native";
+import { router } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { Badge } from "@/src/components/ui/Badge";
 import { Button } from "@/src/components/ui/Button";
 import { Card } from "@/src/components/ui/Card";
-import { SectionTitle } from "@/src/components/ui/Display";
+import { GroupLabel } from "@/src/components/ui/Display";
 import { TextField, ToggleRow } from "@/src/components/ui/Form";
+import { ListRow } from "@/src/components/ui/ListRow";
 import { ScreenContainer } from "@/src/components/ui/ScreenContainer";
 import { ScreenHeader } from "@/src/components/ui/ScreenHeader";
 import { useChangePassword, useMe, useTelegramLink, useUpdateMe } from "@/src/features/profile/api";
-import { useAuth } from "@/src/lib/auth/AuthProvider";
+import { toastBus } from "@/src/lib/toast";
 import { HHMM, PHONE } from "@/src/lib/validation";
 
 function ProfileSection() {
@@ -36,26 +39,35 @@ function ProfileSection() {
     if (phone && !PHONE.test(phone.trim())) return setError("Enter a valid phone number.");
     setError(null);
     update.mutate(
-      { full_name: name.trim(), hostel_block: block.trim().toUpperCase() || undefined, room_number: room.trim() || undefined, phone: phone.trim() || undefined },
-      { onSuccess: () => Alert.alert("Saved", "Your profile is up to date.") },
+      {
+        full_name: name.trim(),
+        hostel_block: block.trim().toUpperCase() || undefined,
+        room_number: room.trim() || undefined,
+        phone: phone.trim() || undefined,
+      },
+      { onSuccess: () => toastBus.show({ icon: "check-circle", title: "Profile saved", tone: "safe" }) },
     );
   };
 
   return (
     <>
-      <SectionTitle title="Profile" />
-      <TextField label="Full name" value={name} onChangeText={setName} />
-      <View className="flex-row gap-3">
-        <View className="flex-1">
-          <TextField label="Block" autoCapitalize="characters" value={block} onChangeText={setBlock} />
+      <GroupLabel label="Profile" />
+      <Card>
+        <TextField label="Full name" value={name} onChangeText={setName} />
+        <View className="flex-row gap-3">
+          <View className="flex-1">
+            <TextField label={me?.role === "warden" ? "Block you manage" : "Hostel block"} autoCapitalize="characters" value={block} onChangeText={setBlock} />
+          </View>
+          {me?.role !== "warden" ? (
+            <View className="flex-1">
+              <TextField label="Room" value={room} onChangeText={setRoom} />
+            </View>
+          ) : null}
         </View>
-        <View className="flex-1">
-          <TextField label="Room" value={room} onChangeText={setRoom} />
-        </View>
-      </View>
-      <TextField label="Phone" keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
-      {error || update.error ? <Text className="text-emergency mb-2">{error ?? update.error?.message}</Text> : null}
-      <Button label="Save profile" onPress={save} disabled={!dirty} loading={update.isPending} />
+        <TextField label="Phone" keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
+        {error || update.error ? <Text className="text-emergency text-[13px] mb-2">{error ?? update.error?.message}</Text> : null}
+        <Button label="Save changes" onPress={save} disabled={!dirty} loading={update.isPending} />
+      </Card>
     </>
   );
 }
@@ -73,44 +85,57 @@ function AlertsSection() {
 
   if (!me) return null;
   const quietValid = (!quietStart && !quietEnd) || (HHMM.test(quietStart) && HHMM.test(quietEnd));
+  const quietChanged = quietStart !== (me.quiet_start ?? "") || quietEnd !== (me.quiet_end ?? "");
 
   return (
     <>
-      <SectionTitle title="Alert delivery" />
+      <GroupLabel label="Notifications" />
       <Card className="py-1">
         <ToggleRow
+          icon="bell"
           label="Push notifications"
-          description={me.has_push_token ? "This phone is registered for push." : "Allow notifications to register this phone."}
+          description={me.has_push_token ? "This phone is registered for push" : "Allow notifications to register this phone"}
           value={me.notify_push}
           onChange={(v) => update.mutate({ notify_push: v })}
         />
         <ToggleRow
+          icon="send"
           label="Telegram alerts"
-          description={me.telegram_chat_id ? "Linked to your Telegram." : "Link Telegram below to enable."}
+          description={me.telegram_chat_id ? "Sent to your linked Telegram" : "Link Telegram below to enable"}
           value={me.notify_telegram}
           disabled={!me.telegram_chat_id}
           onChange={(v) => update.mutate({ notify_telegram: v })}
+          isLast
         />
       </Card>
-      <Text className="text-muted text-xs mt-3 mb-2">
-        Quiet hours mute device and reward notifications. Security alerts always come through.
-      </Text>
-      <View className="flex-row gap-3">
-        <View className="flex-1">
-          <TextField label="Quiet from" placeholder="23:00" maxLength={5} value={quietStart} onChangeText={setQuietStart} />
+
+      <GroupLabel label="Quiet hours" />
+      <Card>
+        <Text className="text-muted text-[13px] mb-3">
+          Mutes device and reward notifications. Security alerts always come through.
+        </Text>
+        <View className="flex-row gap-3">
+          <View className="flex-1">
+            <TextField label="From" placeholder="23:00" maxLength={5} value={quietStart} onChangeText={setQuietStart} />
+          </View>
+          <View className="flex-1">
+            <TextField label="Until" placeholder="07:00" maxLength={5} value={quietEnd} onChangeText={setQuietEnd} />
+          </View>
         </View>
-        <View className="flex-1">
-          <TextField label="Until" placeholder="07:00" maxLength={5} value={quietEnd} onChangeText={setQuietEnd} />
-        </View>
-      </View>
-      {!quietValid ? <Text className="text-emergency text-xs mb-2">Use 24-hour HH:MM for both, or leave both empty.</Text> : null}
-      <Button
-        label="Save quiet hours"
-        variant="secondary"
-        disabled={!quietValid || (quietStart === (me.quiet_start ?? "") && quietEnd === (me.quiet_end ?? ""))}
-        loading={update.isPending}
-        onPress={() => update.mutate({ quiet_start: quietStart || null, quiet_end: quietEnd || null })}
-      />
+        {!quietValid ? <Text className="text-emergency text-[12px] mb-2">Use 24-hour HH:MM for both, or leave both empty.</Text> : null}
+        <Button
+          label="Save quiet hours"
+          variant="secondary"
+          disabled={!quietValid || !quietChanged}
+          loading={update.isPending}
+          onPress={() =>
+            update.mutate(
+              { quiet_start: quietStart || null, quiet_end: quietEnd || null },
+              { onSuccess: () => toastBus.show({ icon: "moon", title: "Quiet hours saved", tone: "primary" }) },
+            )
+          }
+        />
+      </Card>
     </>
   );
 }
@@ -119,31 +144,35 @@ function TelegramSection() {
   const { data: me } = useMe();
   const link = useTelegramLink();
   const qc = useQueryClient();
+  const linked = !!me?.telegram_chat_id;
 
   const onLink = () =>
     link.mutate(undefined, {
-      onSuccess: async ({ deep_link, link_code }) => {
-        if (deep_link && (await Linking.canOpenURL(deep_link))) {
-          await Linking.openURL(deep_link);
-        } else {
-          Alert.alert("Link Telegram", `Send this to the GuardianTag bot:\n\n/start ${link_code}`);
-        }
+      onSuccess: async ({ deep_link }) => {
+        if (deep_link && (await Linking.canOpenURL(deep_link))) await Linking.openURL(deep_link);
         // The bot webhook links the chat; pick it up when the user comes back.
         setTimeout(() => qc.invalidateQueries({ queryKey: ["me"] }), 8000);
       },
-      onError: (e) => Alert.alert("Couldn't create a link", e.message),
+      onError: (e) => toastBus.show({ icon: "alert-circle", title: "Couldn't create a link", subtitle: e.message, tone: "warning" }),
     });
 
   return (
     <>
-      <SectionTitle title="Telegram" />
-      <Card>
-        <Text className="text-white font-medium">{me?.telegram_chat_id ? "✅ Telegram linked" : "Get alerts on Telegram too"}</Text>
-        <Text className="text-muted text-sm mt-1 mb-3">
-          A second channel that works even if app notifications are blocked.
-        </Text>
-        <Button label={me?.telegram_chat_id ? "Re-link Telegram" : "Link Telegram"} variant="secondary" loading={link.isPending} onPress={onLink} />
+      <GroupLabel label="Emergency contacts" />
+      <Card className="py-1">
+        <ListRow
+          icon="send"
+          title="Telegram alerts"
+          subtitle={linked ? "Linked to your account" : "A second channel that works even if app notifications are blocked"}
+          right={<Badge label={linked ? "Linked" : "Not linked"} tone={linked ? "safe" : "muted"} />}
+          onPress={onLink}
+          showChevron
+          isLast
+        />
       </Card>
+      {link.data ? (
+        <Text className="text-muted text-[12px] mt-2 px-1">Opened Telegram. Or send /start {link.data.link_code} to the bot.</Text>
+      ) : null}
     </>
   );
 }
@@ -163,7 +192,7 @@ function PasswordSection() {
         onSuccess: () => {
           setCurrent("");
           setNext("");
-          Alert.alert("Password changed");
+          toastBus.show({ icon: "lock", title: "Password changed", tone: "safe" });
         },
         onError: (e) => setError(e.message),
       },
@@ -172,39 +201,30 @@ function PasswordSection() {
 
   return (
     <>
-      <SectionTitle title="Password" />
-      <TextField label="Current password" secureTextEntry value={current} onChangeText={setCurrent} />
-      <TextField label="New password" secureTextEntry value={next} onChangeText={setNext} />
-      {error ? <Text className="text-emergency mb-2">{error}</Text> : null}
-      <Button label="Change password" variant="secondary" disabled={!current || !next} loading={change.isPending} onPress={save} />
+      <GroupLabel label="Security" />
+      <Card>
+        <TextField label="Current password" secureTextEntry value={current} onChangeText={setCurrent} />
+        <TextField label="New password" secureTextEntry value={next} onChangeText={setNext} />
+        {error ? <Text className="text-emergency text-[13px] mb-2">{error}</Text> : null}
+        <Button label="Change password" variant="secondary" disabled={!current || !next} loading={change.isPending} onPress={save} />
+      </Card>
     </>
   );
 }
 
 export default function SettingsScreen() {
-  const { signOut } = useAuth();
-
-  const onSignOut = () =>
-    Alert.alert("Sign out?", "You'll stop receiving live alerts on this phone.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign out",
-        style: "destructive",
-        onPress: () => signOut(),
-      },
-    ]);
-
   return (
     <ScreenContainer>
-      <ScreenHeader title="Settings" showBack />
+      <ScreenHeader title="Settings" showBack subtitle="Profile, alerts and security" />
       <ProfileSection />
       <AlertsSection />
       <TelegramSection />
       <PasswordSection />
-      <View className="mt-8">
-        <Button label="Sign out" variant="danger" onPress={onSignOut} />
-      </View>
-      <Text className="text-muted text-xs text-center mt-4">GuardianTag · CS4504 PBL</Text>
+      <GroupLabel label="Support" />
+      <Card className="py-1">
+        <ListRow icon="help-circle" title="Help & FAQ" onPress={() => router.push("/help")} showChevron />
+        <ListRow icon="info" title="About GuardianTag" onPress={() => router.push("/about")} showChevron isLast />
+      </Card>
     </ScreenContainer>
   );
 }

@@ -10,12 +10,12 @@ export default function WardenTabs() {
     <Tabs screenOptions={tabScreenOptions}>
       <Tabs.Screen
         name="board"
-        options={{ title: "Board", tabBarIcon: ({ focused }) => <TabIcon icon="🚨" focused={focused} badge={unanswered} /> }}
+        options={{ title: "Board", tabBarIcon: ({ color }) => <TabIcon icon="alert-triangle" color={color} badge={unanswered} /> }}
       />
-      <Tabs.Screen name="rooms" options={{ title: "Rooms", tabBarIcon: ({ focused }) => <TabIcon icon="🏢" focused={focused} /> }} />
-      <Tabs.Screen name="notices" options={{ title: "Notices", tabBarIcon: ({ focused }) => <TabIcon icon="📢" focused={focused} /> }} />
-      <Tabs.Screen name="stats" options={{ title: "Stats", tabBarIcon: ({ focused }) => <TabIcon icon="📊" focused={focused} /> }} />
-      <Tabs.Screen name="account" options={{ title: "Account", tabBarIcon: ({ focused }) => <TabIcon icon="👤" focused={focused} /> }} />
+      <Tabs.Screen name="rooms" options={{ title: "Rooms", tabBarIcon: ({ color }) => <TabIcon icon="grid" color={color} /> }} />
+      <Tabs.Screen name="notices" options={{ title: "Notices", tabBarIcon: ({ color }) => <TabIcon icon="send" color={color} /> }} />
+      <Tabs.Screen name="stats" options={{ title: "Stats", tabBarIcon: ({ color }) => <TabIcon icon="bar-chart-2" color={color} /> }} />
+      <Tabs.Screen name="account" options={{ title: "Account", tabBarIcon: ({ color }) => <TabIcon icon="user" color={color} /> }} />
     </Tabs>
   );
 }

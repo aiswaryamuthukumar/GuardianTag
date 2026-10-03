@@ -2,10 +2,7 @@ import { View, Pressable, type ViewProps } from "react-native";
 
 export function Card({ children, className = "", ...rest }: ViewProps & { className?: string }) {
   return (
-    <View
-      className={`bg-surface border border-border rounded-2xl p-4 ${className}`}
-      {...rest}
-    >
+    <View className={`bg-surface border border-border rounded-2xl p-4 ${className}`} {...rest}>
       {children}
     </View>
   );
@@ -23,6 +20,7 @@ export function PressableCard({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
       className={`bg-surface border border-border rounded-2xl p-4 ${className}`}
       style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
     >

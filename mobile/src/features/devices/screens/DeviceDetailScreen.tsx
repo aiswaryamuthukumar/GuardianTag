@@ -1,13 +1,17 @@
 import { useState } from "react";
-import { Alert, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { router } from "expo-router";
 import { LineChart } from "@/src/components/charts/LineChart";
 import { Button } from "@/src/components/ui/Button";
-import { Card, PressableCard } from "@/src/components/ui/Card";
+import { ConfirmSheet } from "@/src/components/ui/ConfirmSheet";
+import { Badge } from "@/src/components/ui/Badge";
+import { Card } from "@/src/components/ui/Card";
+import { ListRow } from "@/src/components/ui/ListRow";
 import { KeyValue, LiveIndicator, SectionTitle, StatusDot, useNow } from "@/src/components/ui/Display";
 import { TextField } from "@/src/components/ui/Form";
 import { ScreenContainer } from "@/src/components/ui/ScreenContainer";
 import { ScreenHeader } from "@/src/components/ui/ScreenHeader";
+import { StatRow } from "@/src/components/ui/StatRow";
 import { StatTile } from "@/src/components/ui/StatTile";
 import { ErrorState, LoadingState } from "@/src/components/ui/StateViews";
 import { EventRow } from "@/src/features/activity/EventRow";
@@ -23,12 +27,20 @@ export default function DeviceDetailScreen({ id }: { id: string }) {
   const events = useEvents({ device_id: id, limit: 20 });
   const assets = useAssets();
   const rename = useRenameDevice(id);
+  const [confirming, setConfirming] = useState(false);
   const unpair = useUnpairDevice(id);
   const now = useNow();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState("");
 
-  if (device.isLoading) return <ScreenContainer><LoadingState /></ScreenContainer>;
+  if (device.isLoading) {
+    return (
+      <ScreenContainer>
+        <ScreenHeader title="Device" showBack />
+        <LoadingState />
+      </ScreenContainer>
+    );
+  }
   if (!device.data) {
     return (
       <ScreenContainer>
@@ -46,11 +58,7 @@ export default function DeviceDetailScreen({ id }: { id: string }) {
     .reverse();
   const linked = (assets.data ?? []).filter((a) => a.device_id === id);
 
-  const confirmUnpair = () =>
-    Alert.alert("Unpair device?", `${d.name} will stop reporting to your account. Linked belongings are kept.`, [
-      { text: "Cancel", style: "cancel" },
-      { text: "Unpair", style: "destructive", onPress: () => unpair.mutate(undefined, { onSuccess: () => router.back() }) },
-    ]);
+  const confirmUnpair = () => setConfirming(true);
 
   return (
     <ScreenContainer onRefresh={() => { device.refetch(); health.refetch(); events.refetch(); }} refreshing={device.isRefetching}>
@@ -58,15 +66,15 @@ export default function DeviceDetailScreen({ id }: { id: string }) {
 
       <Card className="flex-row items-center mb-3">
         <StatusDot tone={deviceTone[d.status]} />
-        <Text className="text-white font-semibold ml-2 flex-1">{deviceStatusLabel[d.status]}</Text>
+        <Text className="text-foreground font-semibold ml-2 flex-1">{deviceStatusLabel[d.status]}</Text>
         <Text className="text-muted text-sm">Last heartbeat {timeAgo(d.last_seen_at, now)}</Text>
       </Card>
 
-      <View className="flex-row gap-3">
+      <StatRow>
         <StatTile label="Wi-Fi signal" value={latest?.wifi_rssi != null ? `${latest.wifi_rssi} dBm` : "—"} accent="text-primary-light" />
         <StatTile label="Uptime" value={formatUptime(latest?.uptime_seconds ?? null)} />
         <StatTile label="Battery" value={latest?.battery_level != null ? `${latest.battery_level}%` : "USB"} accent="text-safe" />
-      </View>
+      </StatRow>
 
       <SectionTitle title="Signal history" />
       <Card>
@@ -78,15 +86,21 @@ export default function DeviceDetailScreen({ id }: { id: string }) {
         />
       </Card>
 
-      <SectionTitle title="Guarding" action="Add belonging" onAction={() => router.push({ pathname: "/assets/new", params: { deviceId: id } })} />
+      <SectionTitle title="Guarding" action="Add belonging" onAction={() => router.push({ pathname: "/belongings/new", params: { deviceId: id } })} />
       {linked.length ? (
-        linked.map((asset) => (
-          <PressableCard key={asset.id} onPress={() => router.push(`/assets/${asset.id}`)} className="mb-2 flex-row items-center">
-            <Text className="text-xl mr-3">{categoryIcons[asset.category]}</Text>
-            <Text className="text-white flex-1">{asset.name}</Text>
-            <Text className={asset.is_armed ? "text-safe" : "text-muted"}>{asset.is_armed ? "Armed" : "Disarmed"}</Text>
-          </PressableCard>
-        ))
+        <Card className="py-1">
+          {linked.map((asset, i) => (
+            <ListRow
+              key={asset.id}
+              icon={categoryIcons[asset.category]}
+              title={asset.name}
+              onPress={() => router.push(`/belongings/${asset.id}`)}
+              showChevron
+              isLast={i === linked.length - 1}
+              right={<Badge label={asset.is_armed ? "Armed" : "Disarmed"} tone={asset.is_armed ? "safe" : "muted"} />}
+            />
+          ))}
+        </Card>
       ) : (
         <Card>
           <Text className="text-muted">
@@ -132,6 +146,17 @@ export default function DeviceDetailScreen({ id }: { id: string }) {
           <Button label="Unpair device" variant="danger" loading={unpair.isPending} onPress={confirmUnpair} />
         </View>
       )}
+      <ConfirmSheet
+        visible={confirming}
+        title="Unpair device?"
+        message={`${d.name} will stop reporting to your account. Linked belongings are kept.`}
+        confirmLabel="Unpair"
+        onCancel={() => setConfirming(false)}
+        onConfirm={() => {
+          setConfirming(false);
+          unpair.mutate(undefined, { onSuccess: () => router.back() });
+        }}
+      />
     </ScreenContainer>
   );
 }

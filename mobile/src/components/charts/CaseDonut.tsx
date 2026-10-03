@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, View, Text, Pressable } from "react-native";
 import Svg, { Circle } from "react-native-svg";
-import { colors } from "@/constants/theme";
+import { colors } from "@/src/theme";
 
 const SIZE = 132;
 const STROKE = 16;

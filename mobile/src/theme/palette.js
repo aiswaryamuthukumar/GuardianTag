@@ -1,25 +1,27 @@
-// Single source of truth for colours: tailwind.config.js reads this for
-// className styling, and TS code imports it for props that need raw values
-// (SVG fills, ActivityIndicator, tab bar tints).
+// Single source of truth for colours (the feature/frontend teal theme):
+// tailwind.config.js reads this for className styling, and TS code imports it
+// for props that need raw values (SVG fills, icons, switches, tab bar tints).
 const palette = {
-  background: "#0B0B12",
-  surface: "#15151F",
-  surfaceAlt: "#1E1E2B",
-  border: "#2A2A3A",
-  primary: "#8B5CF6",
-  primaryLight: "#A78BFA",
-  primaryDark: "#6D28D9",
-  safe: "#22C55E",
-  safeLight: "#4ADE80",
-  safeDark: "#15803D",
-  warning: "#F97316",
-  warningLight: "#FB923C",
-  warningDark: "#C2410C",
-  emergency: "#EF4444",
-  emergencyLight: "#F87171",
-  emergencyDark: "#B91C1C",
-  muted: "#8B8B9E",
-  text: "#F5F5F7",
+  background: "#0B0F0E",
+  surface: "#151A18",
+  surfaceAlt: "#1B211E",
+  border: "#252D29",
+  hairline: "#1C2220",
+  text: "#F1F5F3",
+  primary: "#69D7B8",
+  primaryLight: "#8BE8CD",
+  primaryDark: "#4FBFA0",
+  safe: "#69D7B8",
+  safeLight: "#8BE8CD",
+  safeDark: "#4FBFA0",
+  warning: "#F2B84B",
+  warningLight: "#F6CC77",
+  warningDark: "#C6952F",
+  emergency: "#EF6262",
+  emergencyLight: "#F49090",
+  emergencyDark: "#C24A4A",
+  muted: "#9AA7A1",
+  mutedLight: "#B8C2BD",
 };
 
 module.exports = { palette };

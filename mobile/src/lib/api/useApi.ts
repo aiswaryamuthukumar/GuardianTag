@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Platform } from "react-native";
 import { ApiError, apiClient } from "@/src/lib/api/client";
 import { useAuth } from "@/src/lib/auth/AuthProvider";
 
@@ -22,12 +23,19 @@ export function useApi() {
       patch: <T>(path: string, body?: unknown) => call((t) => apiClient.patch<T>(path, body, t)),
       delete: <T>(path: string) => call((t) => apiClient.delete<T>(path, t)),
       /** Uploads a local image (camera/gallery URI) and returns its served path. */
-      uploadImage: (uri: string) => {
-        const name = uri.split("/").pop() || "photo.jpg";
-        const type = name.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg";
+      uploadImage: async (uri: string) => {
         const form = new FormData();
-        // React Native's FormData accepts this {uri,name,type} file shape.
-        form.append("file", { uri, name, type } as unknown as Blob);
+        if (Platform.OS === "web") {
+          // The web picker gives a blob:/data: URL; browsers need the actual file.
+          const blob = await (await fetch(uri)).blob();
+          const ext = blob.type === "image/png" ? "png" : blob.type === "image/webp" ? "webp" : "jpg";
+          form.append("file", blob, `photo.${ext}`);
+        } else {
+          const name = uri.split("/").pop() || "photo.jpg";
+          const type = name.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg";
+          // React Native's FormData accepts this {uri,name,type} file shape.
+          form.append("file", { uri, name, type } as unknown as Blob);
+        }
         return call((t) => apiClient.upload<{ url: string }>("/uploads", form, t));
       },
     };

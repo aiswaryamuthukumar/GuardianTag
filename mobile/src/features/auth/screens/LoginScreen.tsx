@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, Text } from "react-native";
-import { Link, useLocalSearchParams } from "expo-router";
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { BackButton } from "@/src/components/ui/BackButton";
 import { Button } from "@/src/components/ui/Button";
 import { TextField } from "@/src/components/ui/Form";
+import { Logo } from "@/src/components/ui/Logo";
 import { RoleTabs } from "@/src/features/auth/RoleTabs";
 import { useAuth } from "@/src/lib/auth/AuthProvider";
 import { EMAIL } from "@/src/lib/validation";
@@ -16,6 +18,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const staff = role === "warden";
 
   const onSubmit = async () => {
     if (!EMAIL.test(email.trim())) return setError("Enter a valid email address.");
@@ -31,20 +34,26 @@ export default function LoginScreen() {
     }
   };
 
-  const staff = role === "warden";
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-background">
-      <ScrollView contentContainerClassName="flex-grow justify-center px-6 py-10" keyboardShouldPersistTaps="handled">
-        <Text className="text-3xl font-extrabold text-white mb-1">Welcome back</Text>
-        <Text className="text-muted mb-6">
-          {staff ? "Sign in to the hostel security console." : "Sign in to keep watch over your belongings."}
-        </Text>
+      {router.canGoBack() ? (
+        <View className="px-4 pt-12">
+          <BackButton />
+        </View>
+      ) : null}
+      <ScrollView contentContainerClassName="flex-grow justify-center px-6 py-6" keyboardShouldPersistTaps="handled">
+        <View className="items-center mb-7">
+          <Logo size={72} showWordmark={false} />
+          <Text className="text-foreground text-[22px] font-bold mt-4">Welcome to GuardianTag</Text>
+          <Text className="text-muted text-[14px] mt-1.5 text-center">
+            {staff ? "Sign in to the hostel security console" : "Sign in to keep watch over your belongings"}
+          </Text>
+        </View>
 
         <RoleTabs value={role} onChange={(r) => { setRole(r); setError(null); }} />
 
         <TextField
-          label={staff ? "Staff email" : "Email"}
-          placeholder={staff ? "warden@college.edu" : "you@college.edu"}
+          placeholder={staff ? "Staff email" : "Email"}
           autoCapitalize="none"
           autoComplete="email"
           keyboardType="email-address"
@@ -52,8 +61,7 @@ export default function LoginScreen() {
           onChangeText={setEmail}
         />
         <TextField
-          label="Password"
-          placeholder="••••••••"
+          placeholder="Password"
           secureTextEntry
           autoComplete="password"
           value={password}
@@ -61,12 +69,23 @@ export default function LoginScreen() {
           onSubmitEditing={onSubmit}
         />
 
-        {error ? <Text className="text-emergency mb-3">{error}</Text> : null}
-        <Button label={staff ? "Sign in as staff" : "Sign in"} onPress={onSubmit} loading={loading} />
+        {error ? <Text className="text-emergency text-[13px] mb-2">{error}</Text> : null}
+        <View className="mt-1">
+          <Button label={staff ? "Sign in as staff" : "Sign in"} size="lg" onPress={onSubmit} loading={loading} />
+        </View>
 
-        <Link href={{ pathname: "/(auth)/register", params: { role } }} className="text-center text-primary-light mt-5">
-          {staff ? "New staff member? Register with invite code" : "Don't have an account? Register"}
-        </Link>
+        <View className="flex-row items-center my-5">
+          <View className="flex-1 h-px bg-border" />
+          <Text className="text-muted text-[12px] mx-3">or</Text>
+          <View className="flex-1 h-px bg-border" />
+        </View>
+
+        <Button
+          label={staff ? "Register with a staff invite code" : "Create a student account"}
+          variant="secondary"
+          size="lg"
+          onPress={() => router.push({ pathname: "/(auth)/register", params: { role } })}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

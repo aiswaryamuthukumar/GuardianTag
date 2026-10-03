@@ -1,3 +1,4 @@
+import type { Feather } from "@expo/vector-icons";
 import type {
   AssetCategory,
   GuardianLevel,
@@ -67,6 +68,9 @@ export const levelLabels: Record<GuardianLevel, string> = {
   hostel_protector: "Hostel Protector",
 };
 
+/** Level ladder in order, matching backend LEVEL_THRESHOLDS. */
+export const LEVEL_ORDER: GuardianLevel[] = ["rookie", "watchman", "guardian", "sentinel", "hostel_protector"];
+
 export const categoryLabels: Record<AssetCategory, string> = {
   bag: "Bag",
   laptop: "Laptop",
@@ -74,11 +78,11 @@ export const categoryLabels: Record<AssetCategory, string> = {
   other: "Other",
 };
 
-export const categoryIcons: Record<AssetCategory, string> = {
-  bag: "🎒",
-  laptop: "💻",
-  document: "📄",
-  other: "📦",
+export const categoryIcons: Record<AssetCategory, keyof typeof Feather.glyphMap> = {
+  bag: "briefcase",
+  laptop: "monitor",
+  document: "file-text",
+  other: "box",
 };
 
 export const statusLabels: Record<IncidentStatus, string> = {

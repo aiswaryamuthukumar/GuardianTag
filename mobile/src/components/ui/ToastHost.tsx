@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, Text, Vibration, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { colors } from "@/constants/theme";
-import { toastBus, type ToastData, type ToastTone } from "@/lib/demo/toast";
+import { colors } from "@/src/theme";
+import { toastBus, type ToastData, type ToastTone } from "@/src/lib/toast";
 
 const toneColor: Record<ToastTone, string> = {
   primary: colors.primary,

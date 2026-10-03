@@ -17,6 +17,7 @@ from app.routers import (  # noqa: E402
     analytics,
     assets,
     auth,
+    demo,
     device_health,
     devices,
     events,
@@ -59,6 +60,7 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
+    allow_origin_regex=settings.cors_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -80,6 +82,7 @@ for router in (
     analytics.router,
     uploads.router,
     warden.router,
+    demo.router,
 ):
     app.include_router(router, prefix=settings.api_v1_prefix)
 

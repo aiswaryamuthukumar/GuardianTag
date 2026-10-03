@@ -67,6 +67,8 @@ export interface Device extends Timestamped {
   status: DeviceStatus;
   firmware_version: string | null;
   last_seen_at: string | null;
+  battery_percent: number | null;
+  signal_strength: number | null; // 0-100 from the last heartbeat's Wi-Fi RSSI
 }
 
 export interface DeviceHealth {
@@ -159,11 +161,18 @@ export interface Notification extends Timestamped {
   is_read: boolean;
 }
 
+export type NoticePriority = "normal" | "urgent";
+
 export interface Notice extends Timestamped {
   warden_id: string | null;
+  author_name: string | null;
   hostel_block: string | null;
   title: string;
   body: string;
+  priority: NoticePriority;
+  is_read: boolean; // for the student viewing it
+  recipients: number; // for wardens: delivered to
+  read_count: number; // for wardens: read by
 }
 
 export interface XPTransaction {
@@ -236,6 +245,41 @@ export interface EventMixItem {
   count: number;
 }
 
+export interface DailyCheck {
+  done_today: boolean;
+  streak_days: number;
+  xp_reward: number;
+}
+
+export interface WeeklySummary {
+  xp_gained: number;
+  streak_days: number;
+  alerts: number;
+  resolved_cases: number;
+  protected_devices: number;
+}
+
+export interface HeatmapDay {
+  date: string;
+  alert: boolean;
+  resolved: boolean;
+  checked: boolean;
+}
+
+export interface AlertTimelineEntry {
+  id: string;
+  triggered_at: string;
+  device_name: string;
+  asset_name: string | null;
+  severity: IncidentSeverity;
+  status: IncidentStatus;
+}
+
+export interface SimulateResult {
+  ignored: boolean;
+  incident: Incident | null;
+}
+
 // --- Warden ---
 
 export interface WardenIncident {
@@ -288,4 +332,6 @@ export type RealtimeMessage =
   | { type: "incident_created" | "incident_updated"; incident: Incident }
   | { type: "notification"; notification: Notification }
   | { type: "asset_updated"; asset: Asset }
-  | { type: "notice"; notice: Notice };
+  | { type: "notice"; notice: Notice }
+  | { type: "notice_read"; notice_id: string; recipients: number; read_count: number }
+  | { type: "notice_deleted"; notice_id: string };

@@ -8,6 +8,11 @@ escalates unanswered alerts to the hostel warden.
 
 CS4504 Mobile Application Development PBL, Chennai Institute of Technology.
 
+## Branches
+
+`feature/frontend` holds the current app: its teal design system (Feather icons, shield scanner,
+charts, toasts) runs on the real backend. The old in-app mock data store is gone.
+
 ## Repo layout
 
 ```
@@ -34,17 +39,18 @@ ESP32 (MPU6050 + Hall) --> local buzzer (always; never waits on the network)
 | # | Module | What it does | Main endpoints |
 |---|---|---|---|
 | 1 | Auth & onboarding | Role-based login and register (Student / Hostel staff tabs); staff need an invite code | `/auth/register`, `/auth/login`, `/auth/me` |
-| 2 | Live dashboard | Protection state, open incidents, devices online, score, live sensor feed, arm-all | `/analytics/summary`, `/events`, WS |
-| 3 | Devices | Pair, rename, unpair; live "last seen", Wi-Fi signal chart, uptime; auto OFFLINE | `/devices`, `/device-health/{id}` |
+| 2 | Live dashboard | Protection state, arm-all, daily Guardian check-in (+10 XP, streak), live sensor feed, devices | `/analytics/summary`, `/gamification/daily-check`, `/events`, WS |
+| 3 | Devices | Pair, rename, unpair; live "last seen", Wi-Fi signal and battery, signal chart; auto OFFLINE | `/devices`, `/device-health/{id}` |
 | 4 | Belongings (assets) | CRUD with photo, category, location, linked device, per-item history | `/assets`, `/uploads` |
 | 5 | Guardian Mode | Arm/disarm each item or all at once; weekly auto-arm schedules | `/assets/arm-all`, `/schedules` |
 | 6 | Live activity | Raw sensor event stream with filters; shows triggers ignored while disarmed | `/events`, WS `sensor_event` |
 | 7 | Incidents | Filtered list; detail with Timeline / Evidence (photo, note) / Resolve; acknowledge | `/incidents/*` |
 | 8 | Emergency alert | Full-screen alarm with vibration on a new incident: false alarm / check / call warden | WS `incident_created` |
 | 9 | Notifications | Live inbox with unread badge, mark read/all, hostel notices, quiet hours, channel toggles | `/notifications/*`, `/notices` |
-| 10 | Analytics & reports | Incident trend, weekday × hour heatmap, coverage ring, response times, PDF export | `/analytics/*` |
-| 11 | Security score | Level progress, streak, XP history, challenges/achievements with live progress | `/gamification/*` |
-| 12 | Profile & settings | Edit profile, alert preferences, Telegram link, change password, sign out | `/auth/*` |
+| 10 | Analytics & reports | Security gauge, case donut, activity timeline, weekday × hour heatmap, device health, response times, weekly summary, alert timeline, PDF export | `/analytics/*`, `/gamification/weekly-summary` |
+| 11 | Rewards | Level ladder, streak, 28-day security heatmap, challenges/achievements with live progress, XP history | `/gamification/*`, `/analytics/security-heatmap` |
+| 12 | Profile & settings | Profile, alert preferences, quiet hours, Telegram link, change password, Help & About, sign out | `/auth/*` |
+| 12a | Demo Controls | Act out device events from the app: trigger, device-button disarm, resolve, heartbeat, status change | `/demo/*` |
 | 13 | Warden live board | Hostel-wide active incidents, most urgent first; acknowledge, call student | `/warden/incidents` |
 | 14 | Rooms overview | Colour-coded room grid (alert / offline / armed / idle) with students and devices | `/warden/rooms` |
 | 15 | Hostel notices | Broadcast to a block or the whole hostel (push + Telegram + inbox) | `/warden/notices` |
@@ -123,6 +129,12 @@ The phone and the PC must be on the same Wi-Fi. Find the PC's IP with `ipconfig`
 Python through Windows Firewall when asked.
 
 ### Demo without hardware
+
+In the app: **Profile → Demo Controls** (or "Send a test alert" on the Guardian tab). These buttons
+call `/demo/*`, which push events through the same backend path as the ESP32, so the emergency
+screen, dashboards and warden board react live. Set `DEMO_TOOLS_ENABLED=false` to turn them off.
+
+From a terminal:
 
 Pair a device in the app with any UID, then:
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Animated, View, Text } from "react-native";
-import { colors } from "@/constants/theme";
-import { formatDuration } from "@/lib/format";
+import { colors } from "@/src/theme";
+import { formatDuration } from "@/src/lib/format";
 
 function Bar({ label, seconds, max, sampleSize, index }: { label: string; seconds: number | null; max: number; sampleSize: number; index: number }) {
   const anim = useRef(new Animated.Value(0)).current;

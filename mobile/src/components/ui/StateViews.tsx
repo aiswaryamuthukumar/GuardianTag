@@ -1,4 +1,5 @@
-import { View, Text, ActivityIndicator } from "react-native";
+import { useEffect, useRef } from "react";
+import { View, Text, Animated, ActivityIndicator } from "react-native";
 import { colors } from "@/src/theme";
 import { Button } from "@/src/components/ui/Button";
 
@@ -11,13 +12,7 @@ export function LoadingState({ label = "Loading..." }: { label?: string }) {
   );
 }
 
-export function ErrorState({
-  message = "Something went wrong.",
-  onRetry,
-}: {
-  message?: string;
-  onRetry?: () => void;
-}) {
+export function ErrorState({ message = "Something went wrong.", onRetry }: { message?: string; onRetry?: () => void }) {
   return (
     <View className="items-center justify-center py-16 px-4">
       <Text className="text-emergency font-semibold text-center mb-1">Couldn&apos;t load this</Text>
@@ -42,15 +37,23 @@ export function EmptyState({
   actionLabel?: string;
   onAction?: () => void;
 }) {
+  const anim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.spring(anim, { toValue: 1, friction: 7, tension: 50, useNativeDriver: true }).start();
+  }, [anim]);
+
   return (
-    <View className="items-center justify-center py-16 px-4">
-      <Text className="text-white font-semibold text-center mb-1">{title}</Text>
+    <Animated.View
+      style={{ opacity: anim, transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) }] }}
+      className="items-center justify-center py-12 px-4"
+    >
+      <Text className="text-foreground font-semibold text-center mb-1">{title}</Text>
       {message ? <Text className="text-muted text-center mb-4">{message}</Text> : null}
       {actionLabel && onAction ? (
         <View className="w-48">
           <Button label={actionLabel} onPress={onAction} variant="secondary" />
         </View>
       ) : null}
-    </View>
+    </Animated.View>
   );
 }

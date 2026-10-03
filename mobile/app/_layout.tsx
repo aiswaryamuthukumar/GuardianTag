@@ -6,6 +6,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { ErrorBoundary } from "@/src/components/ErrorBoundary";
 import { OfflineBanner } from "@/src/components/OfflineBanner";
+import { ToastHost } from "@/src/components/ui/ToastHost";
 import { ApiError } from "@/src/lib/api/client";
 import { AuthProvider, useAuth } from "@/src/lib/auth/AuthProvider";
 import { setupOnlineManager } from "@/src/lib/offline/onlineManager";
@@ -17,7 +18,14 @@ function RootNavigator() {
   if (!isLoaded) return null;
 
   return (
-    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.background },
+        animation: "slide_from_right",
+        animationDuration: 220,
+      }}
+    >
       <Stack.Protected guard={!!isSignedIn}>
         <Stack.Screen name="(app)" />
       </Stack.Protected>
@@ -55,6 +63,7 @@ export default function RootLayout() {
           <OfflineBanner />
           <RootNavigator />
         </ErrorBoundary>
+        <ToastHost />
       </AuthProvider>
     </PersistQueryClientProvider>
   );

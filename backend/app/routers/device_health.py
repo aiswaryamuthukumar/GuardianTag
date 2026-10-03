@@ -37,6 +37,10 @@ def ingest_device_health(payload: DeviceHealthIn, db: Session = Depends(get_db))
     device.last_seen_at = now
     if payload.firmware_version:
         device.firmware_version = payload.firmware_version
+    if payload.battery_level is not None:
+        device.battery_level = payload.battery_level
+    if payload.wifi_rssi is not None:
+        device.wifi_rssi = payload.wifi_rssi
 
     db.add(record)
     db.commit()

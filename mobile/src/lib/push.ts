@@ -1,19 +1,26 @@
 import { useEffect, useRef } from "react";
 import { Platform } from "react-native";
-import Constants from "expo-constants";
+import Constants, { ExecutionEnvironment } from "expo-constants";
 import { useUpdateMe } from "@/src/features/profile/api";
 import type { User } from "@/src/types/api";
+
+// Expo Go dropped remote push on Android in SDK 53; even importing expo-notifications
+// there throws. Live alerts still arrive over the WebSocket, so just skip push.
+const PUSH_UNSUPPORTED =
+  Platform.OS === "web" ||
+  (Platform.OS === "android" && Constants.executionEnvironment === ExecutionEnvironment.StoreClient);
 
 /**
  * Asks for notification permission once signed in and stores the Expo push
  * token on the profile (PATCH /auth/me), so alerts reach a locked phone.
+ * Needs a development or APK build on Android.
  */
 export function usePushRegistration(me: User | undefined) {
   const updateMe = useUpdateMe();
   const done = useRef(false);
 
   useEffect(() => {
-    if (!me || done.current || Platform.OS === "web") return;
+    if (!me || done.current || PUSH_UNSUPPORTED) return;
     done.current = true;
 
     (async () => {

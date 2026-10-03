@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -23,6 +23,20 @@ class Device(UUIDPKMixin, TimestampMixin, Base):
     status: Mapped[DeviceStatus] = mapped_column(device_status_enum, default=DeviceStatus.UNPAIRED)
     firmware_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Latest heartbeat readings, denormalised so lists don't need to join device_health.
+    battery_level: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    wifi_rssi: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    @property
+    def battery_percent(self) -> int | None:
+        return self.battery_level
+
+    @property
+    def signal_strength(self) -> int | None:
+        """Wi-Fi RSSI (about -100..-40 dBm) as 0-100, for bars in the app."""
+        if self.wifi_rssi is None:
+            return None
+        return max(0, min(100, (self.wifi_rssi + 100) * 2))
 
     owner: Mapped["User"] = relationship(back_populates="devices")
     assets: Mapped[list["Asset"]] = relationship(back_populates="device")

@@ -5,12 +5,14 @@ import { Button } from "@/src/components/ui/Button";
 import { TextField } from "@/src/components/ui/Form";
 import { ScreenContainer } from "@/src/components/ui/ScreenContainer";
 import { useMe, useUpdateMe } from "@/src/features/profile/api";
+import { useAuth } from "@/src/lib/auth/AuthProvider";
 import { PHONE } from "@/src/lib/validation";
 
 /** Second onboarding step: where the student lives, so wardens can find them in an emergency. */
 export default function ProfileSetupScreen() {
   const { data: me } = useMe();
   const updateMe = useUpdateMe();
+  const { signOut } = useAuth();
   const [fullName, setFullName] = useState("");
   const [block, setBlock] = useState("");
   const [room, setRoom] = useState("");
@@ -46,7 +48,7 @@ export default function ProfileSetupScreen() {
     <ScreenContainer>
       <View className="pt-10 pb-6">
         <Text className="text-primary-light font-semibold mb-2">One more step</Text>
-        <Text className="text-3xl font-extrabold text-white mb-1">Where do you stay?</Text>
+        <Text className="text-3xl font-extrabold text-foreground mb-1">Where do you stay?</Text>
         <Text className="text-muted">Your block and room let your warden find you fast if an alert goes unanswered.</Text>
       </View>
       <TextField label="Full name" value={fullName} onChangeText={setFullName} />
@@ -68,6 +70,7 @@ export default function ProfileSetupScreen() {
       />
       {error || updateMe.error ? <Text className="text-emergency mb-3">{error ?? updateMe.error?.message}</Text> : null}
       <Button label="Continue" onPress={onSave} loading={updateMe.isPending} />
+      <Button label="Not you? Sign out" variant="ghost" onPress={() => signOut()} className="mt-2" />
     </ScreenContainer>
   );
 }

@@ -1,12 +1,12 @@
 import { View } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { colors } from "@/constants/theme";
+import { colors, tint } from "@/src/theme";
 
 const toneBg: Record<string, string> = {
-  primary: "rgba(105,215,184,0.14)",
-  safe: "rgba(105,215,184,0.14)",
-  warning: "rgba(242,184,75,0.14)",
-  emergency: "rgba(239,98,98,0.14)",
+  primary: tint(colors.primary, 0.14),
+  safe: tint(colors.safe, 0.14),
+  warning: tint(colors.warning, 0.14),
+  emergency: tint(colors.emergency, 0.14),
   muted: colors.surfaceAlt,
 };
 

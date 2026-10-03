@@ -1,6 +1,6 @@
 import { View, Text, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { colors } from "@/constants/theme";
+import { colors } from "@/src/theme";
 
 export function ListRow({
   icon,

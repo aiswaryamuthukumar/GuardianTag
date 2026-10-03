@@ -1,9 +1,10 @@
-export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+// `||`, not `??`: an empty `EXPO_PUBLIC_X=` line in .env must fall back, not become "".
+export const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 /** The backend origin (no /api/v1), used for uploaded files and the WebSocket. */
 export const API_ORIGIN = API_URL.replace(/\/api\/v\d+\/?$/, "");
 
-export const WS_URL = process.env.EXPO_PUBLIC_WS_URL ?? `${API_ORIGIN.replace(/^http/, "ws")}/ws`;
+export const WS_URL = process.env.EXPO_PUBLIC_WS_URL || `${API_ORIGIN.replace(/^http/, "ws")}/ws`;
 
 const TIMEOUT_MS = 10_000;
 

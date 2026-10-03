@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -68,10 +69,18 @@ class NoticeCreateIn(BaseModel):
     title: str = Field(min_length=1, max_length=255)
     body: str = Field(min_length=1, max_length=4000)
     hostel_block: str | None = None
+    priority: Literal["normal", "urgent"] = "normal"
 
 
 class NoticeOut(TimestampedORMBase):
     warden_id: UUID | None = None
+    author_name: str | None = None
     hostel_block: str | None = None
     title: str
     body: str
+    priority: str = "normal"
+    # For the student viewing it: have they read it?
+    is_read: bool = False
+    # For wardens: delivery and read receipts.
+    recipients: int = 0
+    read_count: int = 0

@@ -214,3 +214,37 @@ def evaluate_gamification(db: Session, user: User) -> None:
     """Convenience hook: call after any XP-earning action to unlock anything newly qualified."""
     check_achievements(db, user)
     check_challenges(db, user)
+
+
+DAILY_CHECK_XP = 10
+
+
+def local_day_start(tz_name: str, days_ago: int = 0) -> datetime:
+    """UTC instant of local midnight, `days_ago` days back (hostel days run on local time)."""
+    from zoneinfo import ZoneInfo
+
+    local_now = datetime.now(ZoneInfo(tz_name))
+    midnight = local_now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=days_ago)
+    return midnight.astimezone(timezone.utc)
+
+
+def daily_check_done_today(db: Session, user: User, tz_name: str) -> bool:
+    return (
+        db.query(XPTransaction.id)
+        .filter(
+            XPTransaction.user_id == user.id,
+            XPTransaction.reference_type == "daily_check",
+            XPTransaction.created_at >= local_day_start(tz_name),
+        )
+        .first()
+        is not None
+    )
+
+
+def complete_daily_check(db: Session, user: User, tz_name: str) -> bool:
+    """The student's once-a-day "all my belongings are fine" check-in. Returns False if already done."""
+    if daily_check_done_today(db, user, tz_name):
+        return False
+    award_xp(db, user, DAILY_CHECK_XP, "Daily Guardian check-in", reference_type="daily_check")
+    evaluate_gamification(db, user)
+    return True

@@ -13,7 +13,7 @@ export function useAsset(id: string | undefined) {
   const qc = useQueryClient();
   return useQuery({
     queryKey: qk.asset(id ?? ""),
-    queryFn: () => api.get<Asset>(`/assets/${id}`),
+    queryFn: () => api.get<Asset>(`/belongings/${id}`),
     enabled: !!id,
     initialData: () => qc.getQueryData<Asset[]>(qk.assets)?.find((a) => a.id === id),
   });
@@ -33,7 +33,7 @@ export function useSaveAsset(id?: string) {
   const api = useApi();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: AssetInput) => (id ? api.patch<Asset>(`/assets/${id}`, body) : api.post<Asset>("/assets", body)),
+    mutationFn: (body: AssetInput) => (id ? api.patch<Asset>(`/belongings/${id}`, body) : api.post<Asset>("/assets", body)),
     onSuccess: (asset) => {
       cacheAsset(qc, asset);
       qc.invalidateQueries({ queryKey: ["analytics"] });
@@ -47,7 +47,7 @@ export function useSetArmed() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, armed }: { id: string; armed: boolean }) =>
-      api.patch<Asset>(`/assets/${id}`, { is_armed: armed }),
+      api.patch<Asset>(`/belongings/${id}`, { is_armed: armed }),
     onMutate: async ({ id, armed }) => {
       await qc.cancelQueries({ queryKey: qk.assets });
       const previous = qc.getQueryData<Asset[]>(qk.assets);
@@ -80,7 +80,7 @@ export function useDeleteAsset(id: string) {
   const api = useApi();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => api.delete<void>(`/assets/${id}`),
+    mutationFn: () => api.delete<void>(`/belongings/${id}`),
     onSuccess: () => {
       qc.removeQueries({ queryKey: qk.asset(id) });
       qc.setQueryData<Asset[]>(qk.assets, (list) => list?.filter((a) => a.id !== id));

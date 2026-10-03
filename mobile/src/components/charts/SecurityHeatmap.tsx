@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Animated, View } from "react-native";
-import { colors } from "@/constants/theme";
-import type { HeatmapDay } from "@/types/api";
+import { colors } from "@/src/theme";
+import type { HeatmapDay } from "@/src/types/api";
 
 function cellColor(day: HeatmapDay) {
   if (day.alert) return colors.emergency;

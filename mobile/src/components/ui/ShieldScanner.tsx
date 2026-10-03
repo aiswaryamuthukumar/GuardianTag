@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Animated, Easing, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { colors } from "@/constants/theme";
+import { colors, tint } from "@/src/theme";
 
 export type ScannerTone = "primary" | "emergency" | "muted";
 
@@ -12,9 +12,9 @@ const toneColor: Record<ScannerTone, string> = {
 };
 
 const toneBg: Record<ScannerTone, string> = {
-  primary: "rgba(105,215,184,0.10)",
-  emergency: "rgba(239,98,98,0.10)",
-  muted: "rgba(154,167,161,0.06)",
+  primary: tint(colors.primary, 0.1),
+  emergency: tint(colors.emergency, 0.1),
+  muted: tint(colors.muted, 0.06),
 };
 
 export function ShieldScanner({

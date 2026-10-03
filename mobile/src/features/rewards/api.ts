@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { qk } from "@/src/lib/api/keys";
 import { useApi } from "@/src/lib/api/useApi";
-import type { LevelInfo, ProgressItem, XPTransaction } from "@/src/types/api";
+import type { DailyCheck, LevelInfo, ProgressItem, WeeklySummary, XPTransaction } from "@/src/types/api";
 
 export function useLevel() {
   const api = useApi();
@@ -16,4 +16,27 @@ export function useProgress() {
 export function useXpHistory() {
   const api = useApi();
   return useQuery({ queryKey: qk.xp, queryFn: () => api.get<XPTransaction[]>("/gamification/xp") });
+}
+
+export function useDailyCheck() {
+  const api = useApi();
+  return useQuery({ queryKey: qk.dailyCheck, queryFn: () => api.get<DailyCheck>("/gamification/daily-check") });
+}
+
+export function useCompleteDailyCheck() {
+  const api = useApi();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.post<DailyCheck>("/gamification/daily-check"),
+    onSuccess: (state) => {
+      qc.setQueryData(qk.dailyCheck, state);
+      qc.invalidateQueries({ queryKey: ["gamification"] });
+      qc.invalidateQueries({ queryKey: ["analytics"] });
+    },
+  });
+}
+
+export function useWeeklySummary() {
+  const api = useApi();
+  return useQuery({ queryKey: qk.weekly, queryFn: () => api.get<WeeklySummary>("/gamification/weekly-summary") });
 }

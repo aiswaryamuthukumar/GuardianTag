@@ -1,5 +1,5 @@
-import { View, Text, Pressable } from "react-native";
-import { router } from "expo-router";
+import { View, Text } from "react-native";
+import { BackButton } from "@/src/components/ui/BackButton";
 
 export function ScreenHeader({
   title,
@@ -16,21 +16,15 @@ export function ScreenHeader({
     <View className="flex-row items-center justify-between py-4">
       <View className="flex-row items-center flex-1">
         {showBack ? (
-          <Pressable
-            onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-            hitSlop={8}
-            className="mr-3 w-9 h-9 rounded-full bg-surface border border-border items-center justify-center"
-          >
-            <Text className="text-white text-lg">‹</Text>
-          </Pressable>
+          <View className="mr-3">
+            <BackButton />
+          </View>
         ) : null}
         <View className="flex-1">
-          <Text className="text-2xl font-bold text-white" accessibilityRole="header">
+          <Text className="text-[22px] font-bold text-foreground tracking-tight" accessibilityRole="header" numberOfLines={2}>
             {title}
           </Text>
-          {subtitle ? <Text className="text-muted mt-0.5">{subtitle}</Text> : null}
+          {subtitle ? <Text className="text-muted mt-0.5 text-[14px]">{subtitle}</Text> : null}
         </View>
       </View>
       {right}

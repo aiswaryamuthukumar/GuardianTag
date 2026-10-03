@@ -117,3 +117,65 @@ def test_student_can_list_their_wardens(client, auth_user):
     client.patch("/api/v1/auth/me", headers=warden, json={"phone": "+91 90000 00000"})
     contacts = client.get("/api/v1/auth/wardens", headers=a).json()
     assert contacts == [{"full_name": "Warden W", "phone": "+91 90000 00000", "hostel_block": "A"}]
+
+
+def _send(client, warden, **body):
+    response = client.post("/api/v1/warden/notices", headers=warden, json={"title": "Water cut", "body": "9-11am", **body})
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def test_notice_delivery_and_live_read_receipts(client, auth_user):
+    a1 = _student(client, auth_user, "stu_a1", "A", "101")
+    _student(client, auth_user, "stu_a2", "A", "102")
+    warden = _warden(client, auth_user)
+    sent = _send(client, warden, hostel_block="A")
+    assert sent["recipients"] == 2 and sent["read_count"] == 0 and sent["author_name"] == "Warden W"
+
+    student_view = client.get("/api/v1/notices", headers=a1).json()[0]
+    assert student_view["is_read"] is False
+
+    warden_token = warden["Authorization"].split(" ", 1)[1]
+    with client.websocket_connect(f"/ws/me?token={warden_token}") as ws:
+        read = client.post(f"/api/v1/notices/{sent['id']}/read", headers=a1).json()
+        assert read["is_read"] is True
+        receipt = ws.receive_json()
+    assert receipt == {"type": "notice_read", "notice_id": sent["id"], "recipients": 2, "read_count": 1}
+
+    assert client.get("/api/v1/notices", headers=warden).json()[0]["read_count"] == 1
+
+
+def test_reading_the_inbox_notification_counts_as_read(client, auth_user):
+    a1 = _student(client, auth_user, "stu_a1", "A", "101")
+    warden = _warden(client, auth_user)
+    sent = _send(client, warden, hostel_block="A")
+    notification = client.get("/api/v1/notifications", headers=a1).json()[0]
+    assert notification["data"]["notice_id"] == sent["id"]
+    client.patch(f"/api/v1/notifications/{notification['id']}/read", headers=a1)
+    assert client.get("/api/v1/notices", headers=a1).json()[0]["is_read"] is True
+
+
+def test_urgent_notice_and_student_socket(client, auth_user):
+    a1 = _student(client, auth_user, "stu_a1", "A", "101")
+    warden = _warden(client, auth_user)
+    token = a1["Authorization"].split(" ", 1)[1]
+    with client.websocket_connect(f"/ws/me?token={token}") as ws:
+        _send(client, warden, hostel_block="A", priority="urgent")
+        types = [ws.receive_json() for _ in range(2)]
+    assert types[0]["type"] == "notification" and types[0]["notification"]["title"].startswith("URGENT")
+    assert types[1]["type"] == "notice" and types[1]["notice"]["priority"] == "urgent"
+
+
+def test_delete_notice_removes_it_everywhere(client, auth_user):
+    a1 = _student(client, auth_user, "stu_a1", "A", "101")
+    warden = _warden(client, auth_user)
+    sent = _send(client, warden, hostel_block="A")
+    assert client.delete(f"/api/v1/warden/notices/{sent['id']}", headers=warden).status_code == 204
+    assert client.get("/api/v1/notices", headers=a1).json() == []
+    assert client.get("/api/v1/notifications", headers=a1).json() == []
+
+
+def test_block_warden_limited_to_own_block(client, auth_user):
+    warden = _warden(client, auth_user, block="A")
+    assert client.post("/api/v1/warden/notices", headers=warden, json={"title": "x", "body": "y", "hostel_block": "B"}).status_code == 403
+    assert _send(client, warden)["hostel_block"] == "A"  # defaults to their own block

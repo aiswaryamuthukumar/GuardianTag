@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Animated, View, Text } from "react-native";
-import { colors } from "@/constants/theme";
-import type { Device, DeviceStatus } from "@/types/api";
+import { colors } from "@/src/theme";
+import type { Device, DeviceStatus } from "@/src/types/api";
 
 const signalFor: Record<DeviceStatus, number> = {
   online: 0.95,
@@ -53,7 +53,9 @@ export function PulseDot({ color, live }: { color: string; live: boolean }) {
 
 function DeviceBar({ device, index, isLast }: { device: Device; index: number; isLast: boolean }) {
   const anim = useRef(new Animated.Value(0)).current;
-  const signal = device.battery_percent != null ? device.battery_percent / 100 : signalFor[device.status];
+  // The firmware reports Wi-Fi strength on every heartbeat; battery only on units that measure it.
+  const reading = device.status === "offline" ? null : (device.signal_strength ?? device.battery_percent);
+  const signal = reading != null ? reading / 100 : signalFor[device.status];
 
   useEffect(() => {
     Animated.timing(anim, { toValue: signal, duration: 700, delay: index * 100, useNativeDriver: false }).start();
@@ -68,7 +70,8 @@ function DeviceBar({ device, index, isLast }: { device: Device; index: number; i
         </View>
         <Text className="text-muted text-[12px] capitalize">
           {device.status}
-          {device.battery_percent != null ? ` · ${device.battery_percent}%` : ""}
+          {device.signal_strength != null && device.status !== "offline" ? ` · Wi-Fi ${device.signal_strength}%` : ""}
+          {device.battery_percent != null ? ` · battery ${device.battery_percent}%` : ""}
         </Text>
       </View>
       <View className="h-1.5 rounded-full bg-surface-alt overflow-hidden">

@@ -47,3 +47,19 @@ export function useNotices() {
   const api = useApi();
   return useQuery({ queryKey: qk.notices, queryFn: () => api.get<Notice[]>("/notices") });
 }
+
+/** Student opened a notice: mark it (and its inbox notification) read; the warden sees the receipt live. */
+export function useMarkNoticeRead() {
+  const api = useApi();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.post<Notice>(`/notices/${id}/read`),
+    onMutate: (id) => {
+      qc.setQueryData<Notice[]>(qk.notices, (list) => list?.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.notifications });
+      qc.invalidateQueries({ queryKey: qk.unread });
+    },
+  });
+}

@@ -19,3 +19,5 @@ class Notice(UUIDPKMixin, TimestampMixin, Base):
     hostel_block: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
     title: Mapped[str] = mapped_column(String(255))
     body: Mapped[str] = mapped_column(Text)
+    # "urgent" notices are shown in red and vibrate the phone, e.g. evacuation or water outage.
+    priority: Mapped[str] = mapped_column(String(10), default="normal")

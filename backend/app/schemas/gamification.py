@@ -71,3 +71,17 @@ class LevelInfoOut(BaseModel):
     level_floor: int
     next_level: GuardianLevel | None
     next_level_at: int | None
+
+
+class DailyCheckOut(BaseModel):
+    done_today: bool
+    streak_days: int
+    xp_reward: int
+
+
+class WeeklySummaryOut(BaseModel):
+    xp_gained: int
+    streak_days: int
+    alerts: int
+    resolved_cases: int
+    protected_devices: int

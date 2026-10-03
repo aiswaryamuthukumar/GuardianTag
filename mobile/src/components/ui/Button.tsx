@@ -1,4 +1,5 @@
 import { Pressable, Text, ActivityIndicator } from "react-native";
+import { colors } from "@/src/theme";
 
 export type ButtonVariant = "primary" | "danger" | "safe" | "secondary" | "ghost";
 
@@ -10,11 +11,12 @@ const variantClasses: Record<ButtonVariant, string> = {
   ghost: "bg-transparent",
 };
 
+// Dark text on the light teal fills keeps contrast readable.
 const textClasses: Record<ButtonVariant, string> = {
-  primary: "text-white",
+  primary: "text-background",
   danger: "text-white",
-  safe: "text-white",
-  secondary: "text-white",
+  safe: "text-background",
+  secondary: "text-foreground",
   ghost: "text-primary-light",
 };
 
@@ -36,22 +38,22 @@ export function Button({
   className?: string;
 }) {
   const isDisabled = disabled || loading;
-  const padding = size === "sm" ? "py-2 px-3" : size === "lg" ? "py-4" : "py-3";
+  const padding = size === "sm" ? "py-2 px-3" : size === "lg" ? "py-4" : "py-3.5";
+  const textSize = size === "sm" ? "text-[13px]" : "text-[15px]";
+  const spinner = variant === "primary" || variant === "safe" ? colors.background : colors.text;
   return (
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled, busy: loading }}
-      className={`rounded-xl items-center justify-center ${padding} ${variantClasses[variant]} ${isDisabled ? "opacity-50" : ""} ${className}`}
+      className={`rounded-xl items-center justify-center ${padding} ${variantClasses[variant]} ${isDisabled ? "opacity-40" : ""} ${className}`}
       style={({ pressed }) => ({ opacity: pressed && !isDisabled ? 0.8 : undefined })}
     >
       {loading ? (
-        <ActivityIndicator color="white" />
+        <ActivityIndicator color={spinner} />
       ) : (
-        <Text className={`font-semibold ${size === "lg" ? "text-lg" : size === "sm" ? "text-sm" : ""} ${textClasses[variant]}`}>
-          {label}
-        </Text>
+        <Text className={`font-semibold ${textSize} ${textClasses[variant]}`}>{label}</Text>
       )}
     </Pressable>
   );

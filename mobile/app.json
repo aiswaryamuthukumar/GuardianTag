@@ -1,25 +1,26 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "GuardianTag",
+    "slug": "guardiantag",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "scheme": "hostdost",
+    "scheme": "guardiantag",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.guardiantag.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0B0F0E",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.mobile"
+      "package": "com.guardiantag.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -30,16 +31,24 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/logo.png",
-          "imageWidth": 160,
+          "image": "./assets/symbol.png",
+          "imageWidth": 140,
           "resizeMode": "contain",
-          "backgroundColor": "#050914"
+          "backgroundColor": "#0B0F0E"
         }
       ],
       "expo-secure-store",
       "expo-web-browser",
       "expo-notifications",
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-sharing",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "GuardianTag uses your photos to identify belongings and attach incident evidence.",
+          "cameraPermission": "GuardianTag uses the camera to photograph belongings and incident evidence."
+        }
+      ]
     ]
   }
 }

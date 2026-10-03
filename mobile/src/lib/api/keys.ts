@@ -20,5 +20,7 @@ export const qk = {
   level: ["gamification", "level"] as const,
   progress: ["gamification", "progress"] as const,
   xp: ["gamification", "xp"] as const,
+  dailyCheck: ["gamification", "daily-check"] as const,
+  weekly: ["gamification", "weekly"] as const,
   warden: (name: string) => ["warden", name] as const,
 };

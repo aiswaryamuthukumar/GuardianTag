@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { Linking, Text, View } from "react-native";
+import { Linking, Pressable, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Button } from "@/src/components/ui/Button";
-import { PressableCard } from "@/src/components/ui/Card";
+import { Card } from "@/src/components/ui/Card";
 import { LiveIndicator, useNow } from "@/src/components/ui/Display";
 import { Segmented } from "@/src/components/ui/Form";
 import { ScreenContainer } from "@/src/components/ui/ScreenContainer";
 import { ScreenHeader } from "@/src/components/ui/ScreenHeader";
+import { StatRow } from "@/src/components/ui/StatRow";
 import { StatTile } from "@/src/components/ui/StatTile";
 import { EmptyState, ErrorState, LoadingState } from "@/src/components/ui/StateViews";
 import { IncidentBadges } from "@/src/features/incidents/components/IncidentCard";
@@ -24,11 +25,14 @@ function BoardCard({ incident, now }: { incident: WardenIncident; now: number })
   const urgent = incident.status === "open" && incident.severity === "high";
 
   return (
-    <PressableCard onPress={() => router.push(`/incidents/${incident.id}`)} className={`mb-3 ${urgent ? "border-emergency" : ""}`}>
+    // A plain card with its own tappable summary: a pressable card can't contain the
+    // Acknowledge/Call buttons (nested <button> on web).
+    <Card className={`mb-3 ${urgent ? "border-emergency" : ""}`}>
+      <Pressable onPress={() => router.push(`/incidents/${incident.id}`)} accessibilityRole="button">
       <View className="flex-row justify-between items-start">
         <View className="flex-1 pr-3">
-          <Text className="text-white font-bold text-lg">{where || "Room unknown"}</Text>
-          <Text className="text-white">{incident.student_name}</Text>
+          <Text className="text-foreground font-bold text-lg">{where || "Room unknown"}</Text>
+          <Text className="text-foreground">{incident.student_name}</Text>
         </View>
         <Text className={`text-xs ${urgent ? "text-emergency font-bold" : "text-muted"}`}>{timeAgo(incident.triggered_at, now)}</Text>
       </View>
@@ -36,6 +40,7 @@ function BoardCard({ incident, now }: { incident: WardenIncident; now: number })
         {incident.asset_name ?? incident.device_name} · {incident.title}
       </Text>
       <IncidentBadges status={incident.status} severity={incident.severity} />
+      </Pressable>
       {incident.status === "open" || incident.phone ? (
         <View className="flex-row gap-2 mt-3">
           {incident.status === "open" ? (
@@ -46,7 +51,7 @@ function BoardCard({ incident, now }: { incident: WardenIncident; now: number })
           ) : null}
         </View>
       ) : null}
-    </PressableCard>
+    </Card>
   );
 }
 
@@ -68,11 +73,11 @@ export default function BoardScreen() {
         subtitle={me?.hostel_block ? `Block ${me.hostel_block}` : "Whole hostel"}
         right={<LiveIndicator />}
       />
-      <View className="flex-row gap-3 mb-4">
-        <StatTile label="Unanswered" value={open} accent={open ? "text-emergency" : "text-white"} />
-        <StatTile label="Escalated" value={escalated} accent={escalated ? "text-emergency" : "text-white"} />
+      <StatRow className="mb-4">
+        <StatTile label="Unanswered" value={open} accent={open ? "text-emergency" : "text-foreground"} />
+        <StatTile label="Escalated" value={escalated} accent={escalated ? "text-emergency" : "text-foreground"} />
         <StatTile label="Investigating" value={list.filter((i) => i.status === "investigating").length} accent="text-warning" />
-      </View>
+      </StatRow>
       <Segmented
         options={[
           { value: "active", label: "Active" },

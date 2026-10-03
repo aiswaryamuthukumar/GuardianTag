@@ -2,7 +2,9 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, Query, status
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Query as SAQuery
 from sqlalchemy.orm import Session
 
@@ -11,7 +13,7 @@ from app.core.database import get_db
 from app.core.security import require_warden
 from app.models.asset import Asset
 from app.models.device import Device
-from app.models.enums import DeviceStatus, IncidentSeverity, IncidentStatus, NotificationType, UserRole
+from app.models.enums import DeviceStatus, IncidentSeverity, IncidentStatus, UserRole
 from app.models.incident import Incident
 from app.models.notice import Notice
 from app.models.user import User
@@ -26,8 +28,7 @@ from app.schemas.warden import (
     WardenIncidentOut,
 )
 from app.services.incidents import ACTIVE_STATUSES
-from app.services.notify import notify_user
-from app.services.realtime import publish_user
+from app.services import notices as notice_service
 
 router = APIRouter(prefix="/warden", tags=["warden"])
 
@@ -180,28 +181,25 @@ def hostel_analytics(warden: User = Depends(require_warden), db: Session = Depen
 @router.post("/notices", response_model=NoticeOut, status_code=status.HTTP_201_CREATED)
 def broadcast_notice(
     payload: NoticeCreateIn, warden: User = Depends(require_warden), db: Session = Depends(get_db)
-) -> Notice:
+) -> NoticeOut:
     """Sends a notice to every student in a block (default: the warden's own block, or everyone)."""
     block = payload.hostel_block if payload.hostel_block is not None else warden.hostel_block
-    block = (block or "").strip() or None
-    notice = Notice(warden_id=warden.id, hostel_block=block, title=payload.title, body=payload.body)
+    block = (block or "").strip().upper() or None
+    if warden.hostel_block and block != warden.hostel_block:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, f"You can only send notices to block {warden.hostel_block}")
+    notice = Notice(
+        warden_id=warden.id, hostel_block=block, title=payload.title.strip(), body=payload.body.strip(), priority=payload.priority
+    )
     db.add(notice)
     db.commit()
     db.refresh(notice)
+    return notice_service.broadcast(db, warden, notice)
 
-    recipients = db.query(User).filter(User.role == UserRole.STUDENT)
-    if block:
-        recipients = recipients.filter(User.hostel_block == block)
-    message = {"type": "notice", "notice": NoticeOut.model_validate(notice).model_dump(mode="json")}
-    for student in recipients.all():
-        notify_user(
-            db,
-            student,
-            NotificationType.SYSTEM,
-            title=f"Notice: {notice.title}",
-            body=notice.body,
-            data={"notice_id": str(notice.id)},
-            telegram_alert=True,
-        )
-        publish_user(student.id, message)
-    return notice
+
+@router.delete("/notices/{notice_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_notice(notice_id: UUID, warden: User = Depends(require_warden), db: Session = Depends(get_db)) -> None:
+    """Withdraws a notice from every student. Block wardens can only withdraw their block's notices."""
+    notice = db.get(Notice, notice_id)
+    if notice is None or (warden.hostel_block and notice.hostel_block != warden.hostel_block):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Notice not found")
+    notice_service.delete(db, notice)

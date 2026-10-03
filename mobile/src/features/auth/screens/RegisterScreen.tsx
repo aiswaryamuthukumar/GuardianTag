@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
-import { Link, useLocalSearchParams } from "expo-router";
+import { Link, router, useLocalSearchParams } from "expo-router";
+import { BackButton } from "@/src/components/ui/BackButton";
 import { Button } from "@/src/components/ui/Button";
 import { TextField } from "@/src/components/ui/Form";
 import { RoleTabs } from "@/src/features/auth/RoleTabs";
@@ -53,8 +54,11 @@ export default function RegisterScreen() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1 bg-background">
-      <ScrollView contentContainerClassName="flex-grow justify-center px-6 py-10" keyboardShouldPersistTaps="handled">
-        <Text className="text-3xl font-extrabold text-white mb-1">Create account</Text>
+      <View className="px-4 pt-12">
+        <BackButton onPress={() => (router.canGoBack() ? router.back() : router.replace("/login"))} />
+      </View>
+      <ScrollView contentContainerClassName="flex-grow justify-center px-6 py-6" keyboardShouldPersistTaps="handled">
+        <Text className="text-3xl font-extrabold text-foreground mb-1">Create account</Text>
         <Text className="text-muted mb-6">
           {staff ? "Hostel staff get the live board, room overview and notices." : "Guard your belongings from day one."}
         </Text>

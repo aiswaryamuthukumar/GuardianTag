@@ -9,12 +9,12 @@ import { ScreenHeader } from "@/src/components/ui/ScreenHeader";
 import { PhotoPicker } from "@/src/features/assets/PhotoPicker";
 import { useAsset, useSaveAsset } from "@/src/features/assets/api";
 import { useDevices } from "@/src/features/devices/api";
-import { categoryIcons, categoryLabels } from "@/src/lib/format";
+import { categoryLabels } from "@/src/lib/format";
 import type { AssetCategory } from "@/src/types/api";
 
 const CATEGORIES = (Object.keys(categoryLabels) as AssetCategory[]).map((value) => ({
   value,
-  label: `${categoryIcons[value]} ${categoryLabels[value]}`,
+  label: categoryLabels[value],
 }));
 
 /** Create a belonging, or edit one when `id` is given. */
@@ -54,13 +54,13 @@ export default function AssetFormScreen({ id, deviceId }: { id?: string; deviceI
         photo_url: photo,
         device_id: device === "none" ? null : device,
       },
-      { onSuccess: (asset) => (id ? router.back() : router.replace(`/assets/${asset.id}`)) },
+      { onSuccess: (asset) => (id ? router.back() : router.replace(`/belongings/${asset.id}`)) },
     );
   };
 
   const deviceOptions = [
     { value: "none", label: "No device" },
-    ...(devices.data ?? []).map((d) => ({ value: d.id, label: `📡 ${d.name}` })),
+    ...(devices.data ?? []).map((d) => ({ value: d.id, label: d.name })),
   ];
 
   return (

@@ -1,8 +1,12 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy import func
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.security import get_current_user
+from app.models.asset import Asset
+from app.models.enums import IncidentStatus
 from app.models.gamification import (
     Achievement,
     Challenge,
@@ -11,17 +15,28 @@ from app.models.gamification import (
     UserAchievement,
     XPTransaction,
 )
+from app.models.incident import Incident
 from app.models.user import User
 from app.schemas.gamification import (
     AchievementOut,
     ChallengeOut,
+    DailyCheckOut,
     LevelInfoOut,
     ProgressItemOut,
     SecurityScoreOut,
     UserAchievementOut,
+    WeeklySummaryOut,
     XPTransactionOut,
 )
-from app.services.gamification import LEVEL_THRESHOLDS, get_or_create_security_score, metric_value
+from app.services.gamification import (
+    DAILY_CHECK_XP,
+    LEVEL_THRESHOLDS,
+    complete_daily_check,
+    daily_check_done_today,
+    get_or_create_security_score,
+    local_day_start,
+    metric_value,
+)
 
 router = APIRouter(prefix="/gamification", tags=["gamification"])
 
@@ -125,3 +140,63 @@ def get_progress(current_user: User = Depends(get_current_user), db: Session = D
     items = [item("challenge", c, c.title, completed.get(c.id)) for c in db.query(Challenge).filter(Challenge.is_active.is_(True))]
     items += [item("achievement", a, a.name, unlocked.get(a.id)) for a in db.query(Achievement).order_by(Achievement.name)]
     return items
+
+
+def _daily_check_state(db: Session, user: User) -> DailyCheckOut:
+    score = get_or_create_security_score(db, user)
+    db.commit()
+    return DailyCheckOut(
+        done_today=daily_check_done_today(db, user, get_settings().app_timezone),
+        streak_days=score.streak_days,
+        xp_reward=DAILY_CHECK_XP,
+    )
+
+
+@router.get("/daily-check", response_model=DailyCheckOut)
+def get_daily_check(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> DailyCheckOut:
+    return _daily_check_state(db, current_user)
+
+
+@router.post("/daily-check", response_model=DailyCheckOut)
+def do_daily_check(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> DailyCheckOut:
+    """Once per local day: +10 XP and it keeps the streak alive. Repeating it is a no-op."""
+    complete_daily_check(db, current_user, get_settings().app_timezone)
+    return _daily_check_state(db, current_user)
+
+
+@router.get("/weekly-summary", response_model=WeeklySummaryOut)
+def weekly_summary(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> WeeklySummaryOut:
+    since = local_day_start(get_settings().app_timezone, days_ago=6)
+    xp = (
+        db.query(func.coalesce(func.sum(XPTransaction.amount), 0))
+        .filter(XPTransaction.user_id == current_user.id, XPTransaction.created_at >= since)
+        .scalar()
+    )
+    alerts = (
+        db.query(func.count(Incident.id))
+        .filter(Incident.user_id == current_user.id, Incident.triggered_at >= since)
+        .scalar()
+    )
+    resolved = (
+        db.query(func.count(Incident.id))
+        .filter(
+            Incident.user_id == current_user.id,
+            Incident.resolved_at >= since,
+            Incident.status.in_((IncidentStatus.RESOLVED, IncidentStatus.FALSE_ALARM)),
+        )
+        .scalar()
+    )
+    protected = (
+        db.query(func.count(func.distinct(Asset.device_id)))
+        .filter(Asset.owner_id == current_user.id, Asset.is_armed.is_(True), Asset.device_id.isnot(None))
+        .scalar()
+    )
+    score = get_or_create_security_score(db, current_user)
+    db.commit()
+    return WeeklySummaryOut(
+        xp_gained=int(xp or 0),
+        streak_days=score.streak_days,
+        alerts=alerts or 0,
+        resolved_cases=resolved or 0,
+        protected_devices=protected or 0,
+    )

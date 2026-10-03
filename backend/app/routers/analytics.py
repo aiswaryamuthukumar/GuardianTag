@@ -12,7 +12,8 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.asset import Asset
 from app.models.device import Device
-from app.models.enums import IncidentStatus
+from app.models.enums import IncidentSeverity, IncidentStatus
+from app.models.gamification import XPTransaction
 from app.models.incident import Incident
 from app.models.sensor_event import SensorEvent
 from app.models.user import User
@@ -209,3 +210,83 @@ def event_mix(
         .all()
     )
     return [EventMixItem(event_type=event_type.value, count=count) for event_type, count in rows]
+
+
+class SecurityDay(BaseModel):
+    """One square of the rewards heatmap: what happened on this local day."""
+
+    date: str
+    alert: bool
+    resolved: bool
+    checked: bool
+
+
+class AlertTimelineEntry(BaseModel):
+    id: str
+    triggered_at: datetime
+    device_name: str
+    asset_name: str | None
+    severity: IncidentSeverity
+    status: IncidentStatus
+
+
+@router.get("/security-heatmap", response_model=list[SecurityDay])
+def security_heatmap(
+    days: int = Query(default=28, ge=7, le=120),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[SecurityDay]:
+    """Per-day activity, oldest first: alerts raised, cases closed, and daily check-ins."""
+    tz = ZoneInfo(get_settings().app_timezone)
+    today = datetime.now(tz).date()
+    start = today - timedelta(days=days - 1)
+    since = datetime.combine(start, datetime.min.time(), tzinfo=tz)
+
+    def local_dates(rows) -> set:
+        return {value.astimezone(tz).date() for (value,) in rows if value is not None}
+
+    alerts = local_dates(
+        db.query(Incident.triggered_at).filter(Incident.user_id == current_user.id, Incident.triggered_at >= since)
+    )
+    resolved = local_dates(
+        db.query(Incident.resolved_at).filter(Incident.user_id == current_user.id, Incident.resolved_at >= since)
+    )
+    checked = local_dates(
+        db.query(XPTransaction.created_at).filter(
+            XPTransaction.user_id == current_user.id,
+            XPTransaction.reference_type == "daily_check",
+            XPTransaction.created_at >= since,
+        )
+    )
+    return [
+        SecurityDay(date=day.isoformat(), alert=day in alerts, resolved=day in resolved, checked=day in checked)
+        for day in (start + timedelta(days=i) for i in range(days))
+    ]
+
+
+@router.get("/alert-timeline", response_model=list[AlertTimelineEntry])
+def alert_timeline(
+    limit: int = Query(default=10, ge=1, le=50),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[AlertTimelineEntry]:
+    rows = (
+        db.query(Incident, Device.name, Asset.name)
+        .join(Device, Incident.device_id == Device.id)
+        .outerjoin(Asset, Incident.asset_id == Asset.id)
+        .filter(Incident.user_id == current_user.id)
+        .order_by(Incident.triggered_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        AlertTimelineEntry(
+            id=str(incident.id),
+            triggered_at=incident.triggered_at,
+            device_name=device_name,
+            asset_name=asset_name,
+            severity=incident.severity,
+            status=incident.status,
+        )
+        for incident, device_name, asset_name in rows
+    ]

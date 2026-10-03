@@ -32,7 +32,7 @@ function Timeline({ incident }: { incident: IncidentDetail }) {
               {i < incident.timeline_events.length - 1 ? <View className="w-px flex-1 bg-border my-1" /> : null}
             </View>
             <View className="flex-1 pb-4">
-              <Text className="text-white">{event.description}</Text>
+              <Text className="text-foreground">{event.description}</Text>
               <Text className="text-muted text-xs mt-0.5">
                 {formatDateTime(event.occurred_at)} · {event.event_metadata?.author ? String(event.event_metadata.author) : event.actor}
               </Text>
@@ -56,7 +56,7 @@ function Timeline({ incident }: { incident: IncidentDetail }) {
 
 function EvidenceTab({ incident }: { incident: IncidentDetail }) {
   const addEvidence = useAddEvidence(incident.id);
-  const { pick, uploading } = usePickAndUpload();
+  const { pick, uploading, sheet } = usePickAndUpload();
   const [text, setText] = useState("");
   return (
     <View>
@@ -66,7 +66,7 @@ function EvidenceTab({ incident }: { incident: IncidentDetail }) {
             {item.type === "photo" && item.url ? (
               <Image source={{ uri: fileUrl(item.url) }} className="w-full h-48 rounded-xl mb-2" resizeMode="cover" />
             ) : null}
-            {item.content ? <Text className="text-white">{item.content}</Text> : null}
+            {item.content ? <Text className="text-foreground">{item.content}</Text> : null}
             <Text className="text-muted text-xs mt-1">
               {item.type.replace("_", " ")} · {formatDateTime(item.captured_at)}
             </Text>
@@ -92,6 +92,7 @@ function EvidenceTab({ incident }: { incident: IncidentDetail }) {
           />
         </View>
       </View>
+      {sheet}
     </View>
   );
 }
@@ -151,7 +152,14 @@ export default function IncidentDetailScreen({ id }: { id: string }) {
   const acknowledge = useAcknowledge(id);
   const [tab, setTab] = useState<Tab>("timeline");
 
-  if (incident.isLoading) return <ScreenContainer><LoadingState /></ScreenContainer>;
+  if (incident.isLoading) {
+    return (
+      <ScreenContainer>
+        <ScreenHeader title="Incident" showBack />
+        <LoadingState />
+      </ScreenContainer>
+    );
+  }
   if (!incident.data) {
     return (
       <ScreenContainer>

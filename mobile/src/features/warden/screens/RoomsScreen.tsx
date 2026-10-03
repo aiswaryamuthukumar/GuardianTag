@@ -25,7 +25,7 @@ function RoomSheet({ room, onClose }: { room: Room | null; onClose: () => void }
       <Pressable className="flex-1 bg-black/60" onPress={onClose} />
       {room ? (
         <View className="bg-background border-t border-border rounded-t-3xl p-5 pb-10">
-          <Text className="text-white text-xl font-bold">
+          <Text className="text-foreground text-xl font-bold">
             Block {room.hostel_block ?? "?"} · Room {room.room_number ?? "?"}
           </Text>
           <Text className="text-muted mb-3">
@@ -35,7 +35,7 @@ function RoomSheet({ room, onClose }: { room: Room | null; onClose: () => void }
           <SectionTitle title="Students" />
           {room.students.map((s) => (
             <View key={s.id} className="flex-row items-center justify-between py-2">
-              <Text className="text-white">{s.full_name}</Text>
+              <Text className="text-foreground">{s.full_name}</Text>
               {s.phone ? <Button label="Call" size="sm" variant="secondary" onPress={() => Linking.openURL(`tel:${s.phone!.replace(/\s/g, "")}`)} /> : null}
             </View>
           ))}
@@ -44,7 +44,7 @@ function RoomSheet({ room, onClose }: { room: Room | null; onClose: () => void }
             room.devices.map((d) => (
               <View key={d.id} className="flex-row items-center py-1.5">
                 <StatusDot tone={deviceTone[d.status]} />
-                <Text className="text-white ml-2 flex-1">{d.name}</Text>
+                <Text className="text-foreground ml-2 flex-1">{d.name}</Text>
                 <Text className="text-muted text-xs">{timeAgo(d.last_seen_at)}</Text>
               </View>
             ))
@@ -83,7 +83,7 @@ export default function RoomsScreen() {
       <View className="flex-row flex-wrap gap-2 mt-3">
         {(Object.keys(stateStyle) as RoomState[]).map((state) => (
           <View key={state} className={`flex-row items-center px-2.5 py-1 rounded-full border ${stateStyle[state].cls}`}>
-            <Text className="text-white text-xs">
+            <Text className="text-foreground text-xs">
               {stateStyle[state].label}: {counts(state)}
             </Text>
           </View>
@@ -105,11 +105,11 @@ export default function RoomsScreen() {
                 accessibilityLabel={`Room ${room.room_number}, ${stateStyle[room.state].label}`}
                 className={`w-[31%] aspect-square rounded-xl border items-center justify-center ${stateStyle[room.state].cls}`}
               >
-                <Text className="text-white font-bold text-lg">{room.room_number ?? "?"}</Text>
+                <Text className="text-foreground font-bold text-lg">{room.room_number ?? "?"}</Text>
                 <Text className="text-muted text-[10px]">
                   {room.students.length} student{room.students.length === 1 ? "" : "s"}
                 </Text>
-                {room.open_incidents ? <Text className="text-emergency text-xs font-bold mt-0.5">🚨 {room.open_incidents}</Text> : null}
+                {room.open_incidents ? <Text className="text-emergency-light text-xs font-bold mt-0.5">{room.open_incidents} open</Text> : null}
               </Pressable>
             ))}
           </View>

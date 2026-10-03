@@ -1,18 +1,17 @@
-import { View, Text, Image } from "react-native";
+import { Image, Text, View } from "react-native";
+import { colors } from "@/src/theme";
 
-export function Logo({ size = 36 }: { size?: number }) {
+/** Shield mark plus the two-tone GuardianTag wordmark. */
+export function Logo({ size = 36, showWordmark = true }: { size?: number; showWordmark?: boolean }) {
   return (
-    <View className="flex-row items-center">
-      <Image
-        source={require("@/assets/symbol.png")}
-        style={{ width: size, height: size, resizeMode: "contain" }}
-      />
-      <Text
-        style={{ fontSize: size * 0.44, marginLeft: size * 0.06, fontWeight: "800", letterSpacing: -0.3 }}
-      >
-        <Text style={{ color: "#F1F5F3" }}>Hos</Text>
-        <Text style={{ color: "#69D7B8" }}>Dost</Text>
-      </Text>
+    <View className="flex-row items-center" accessibilityRole="image" accessibilityLabel="GuardianTag">
+      <Image source={require("@/assets/symbol.png")} style={{ width: size, height: size }} resizeMode="contain" />
+      {showWordmark ? (
+        <Text style={{ fontSize: size * 0.44, marginLeft: size * 0.08, fontWeight: "800", letterSpacing: -0.3 }}>
+          <Text style={{ color: colors.text }}>Guardian</Text>
+          <Text style={{ color: colors.primary }}>Tag</Text>
+        </Text>
+      ) : null}
     </View>
   );
 }

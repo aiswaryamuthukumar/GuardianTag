@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     # Schedules and quiet hours are entered in local wall-clock time
     app_timezone: str = "Asia/Kolkata"
 
+    # DEMO CONTROLS - in-app buttons that act out device events (see routers/demo.py)
+    demo_tools_enabled: bool = True
+
     # UPLOADS (asset photos, incident evidence) - served back at /uploads
     upload_dir: str = "uploads"
     max_upload_bytes: int = 5 * 1024 * 1024
@@ -68,6 +71,14 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @property
+    def cors_origin_regex(self) -> str | None:
+        """In development, also allow the Expo web preview from localhost or any private
+        LAN / hotspot address, whose IP changes as you move networks. Never in production."""
+        if self.env != "development":
+            return None
+        return r"https?://(localhost|127\.0\.0\.1|10(\.\d{1,3}){3}|192\.168(\.\d{1,3}){2}|172\.(1[6-9]|2\d|3[01])(\.\d{1,3}){2})(:\d+)?"
 
 
 @lru_cache
